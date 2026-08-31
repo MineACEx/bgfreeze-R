@@ -2,5 +2,32 @@
   "version": "v1.0.0",
   "versionCode": 100,
   "zipUrl": "https://github.com/MineACEx/bgfreeze-R/releases/download/v1.0.0/bgfreeze-R-v1.0.0.zip",
-  "releaseNote": "## v1.0.0\n\n### 新功能\n- Rust 重构后台冻结内核（SIGSTOP / CPUSET / Renice 三重冻结）\n- 消息推送进程保留、前台保护、解冻宽限期\n- WebUI 控制中心：绿/红状态卡、3D 按压倾斜卡片、卸载 / 更新 / 重启\n- 更新公告支持 Markdown 渲染\n\n### 修复\n- 修复安装后二进制无执行权限导致守护进程无法启动的问题\n\n> 使用问题请到 Issues 反馈"
+  "releaseNote": "## v1.0.0
+
+**中文**
+
+### 新功能
+- Rust 全覆盖后台冻结内核（SIGSTOP / CPUSET / Renice 三重冻结）
+- 消息推送进程保留、前台保护、解冻宽限期（默认 120s）
+- WebUI：绿/红状态卡、3D 按压倾斜卡片、控制中心（卸载 / 更新 / 重启）
+- 更新公告支持 Markdown 渲染；ARM32 双架构；中英双语界面
+- 官方微信 / QQ / 抖音图标；进程两行布局；日志一键复制
+
+### 修复
+- 修复英雄卡按压 / 长按保持状态色的兼容性问题
+- 修复安装后二进制无执行权限导致守护进程无法启动的问题
+
+### Backup Note（English）
+
+**What's new**
+- Rust-only freeze engine (SIGSTOP / CPUSET / Renice)
+- Push-preserve, foreground protection, 120s grace period
+- WebUI: status cards with 3D tilt, control center (uninstall / update / reboot)
+- Markdown release notes; ARM32 dual-arch; bilingual UI; official app icons; log copy
+
+**Fixes**
+- Preserve hero-card status color while pressed
+- Fix missing exec permission causing daemon not to start
+
+> 使用问题请到 Issues 反馈 · Please report issues via GitHub Issues"
 }
