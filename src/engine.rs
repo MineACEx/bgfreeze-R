@@ -23,6 +23,7 @@ pub struct AppStatus {
     pub enabled: bool,
     pub foreground: bool,
     pub grace: bool,
+    pub power: u8,
     pub processes: Vec<ProcStatus>,
     pub frozen_kb: u64,
 }
@@ -111,17 +112,20 @@ impl Engine {
 
     // ---------- 冻结 / 解冻 ----------
 
-    fn freeze_pid(&self, pid: i32, entry: &sys::ProcEntry, app: String) {
+    fn freeze_pid(&self, pid: i32, entry: &sys::ProcEntry, app: &str, power: u8) {
         let cfg = self.config.read().unwrap().clone();
         let old_nice = sys::get_nice(pid);
-        let ok_sig = !cfg.use_sigstop || sys::sigstop(pid);
-        let ok_cpu = !cfg.use_cpuset || sys::cpuset_restrict(pid);
-        let ok_nice = if cfg.use_renice { sys::set_nice(pid, 19) } else { true };
-        if ok_sig || ok_nice {
-            self.frozen.lock().unwrap().insert(pid, FrozenMeta { name: entry.name.clone(), old_nice, app: app.clone() });
+        let use_sig = cfg.use_sigstop && power >= 2;
+        let use_cpu = cfg.use_cpuset && power >= 1;
+        let use_nice = cfg.use_renice;
+        let ok_sig = !use_sig || sys::sigstop(pid);
+        let ok_cpu = !use_cpu || sys::cpuset_restrict(pid);
+        let ok_nice = if use_nice { sys::set_nice(pid, 19) } else { true };
+        if ok_sig || ok_cpu || ok_nice {
+            self.frozen.lock().unwrap().insert(pid, FrozenMeta { name: entry.name.clone(), old_nice, app: app.to_string() });
             self.log.info(&format!(
-                "FREEZE  pid={} name={} app={} sigstop={} cpuset={} renice={}",
-                pid, entry.name, app, ok_sig, ok_cpu, ok_nice
+                "FREEZE  pid={} name={} app={} power={} sigstop={} cpuset={} renice={}",
+                pid, entry.name, app, power, ok_sig, ok_cpu, ok_nice
             ));
         } else {
             self.log.warn(&format!("FREEZE 失败 pid={} name={}", pid, entry.name));
@@ -211,7 +215,7 @@ impl Engine {
                 }
             }
             for p in &to_freeze {
-                self.freeze_pid(p.pid, p, app.package.clone());
+                self.freeze_pid(p.pid, p, &app.package, app.power);
             }
             for pid in &to_unfreeze {
                 self.unfreeze_pid(*pid);
@@ -252,6 +256,7 @@ impl Engine {
                 enabled: app.enabled,
                 foreground,
                 grace: in_grace,
+                power: app.power,
                 processes: procs_status,
                 frozen_kb: app_kb,
             });
@@ -326,7 +331,7 @@ impl Engine {
             let is_keep = !is_main && app.keep.iter().any(|k| p.name.ends_with(k));
             let can = !is_keep && !(is_main && !app.freeze_main);
             if can && !self.frozen.lock().unwrap().contains_key(&p.pid) {
-                self.freeze_pid(p.pid, p, pkg.to_string());
+                self.freeze_pid(p.pid, p, pkg, app.power);
             }
         }
     }
