@@ -14,6 +14,9 @@ pub struct AppConf {
     pub keep: Vec<String>,
     #[serde(default = "default_true")]
     pub freeze_main: bool,
+    /// 冻结力度：0=轻(仅renice) 1=标准(renice+cpuset) 2=激进(全部含SIGSTOP)
+    #[serde(default = "default_power")]
+    pub power: u8,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -41,6 +44,7 @@ fn default_true() -> bool { true }
 fn default_interval() -> u64 { 10 }
 fn default_port() -> u16 { 8765 }
 fn default_grace() -> u64 { 120 }
+fn default_power() -> u8 { 2 }
 
 impl Default for Config {
     fn default() -> Self {
@@ -53,9 +57,9 @@ impl Default for Config {
             use_cpuset: true,
             port: 8765,
             apps: vec![
-                AppConf { package: "com.tencent.mm".into(), label: "微信".into(), enabled: true, keep: vec![":push".into()], freeze_main: true },
-                AppConf { package: "com.tencent.mobileqq".into(), label: "QQ".into(), enabled: true, keep: vec![":MSF".into(), ":msf".into()], freeze_main: true },
-                AppConf { package: "com.ss.android.ugc.aweme".into(), label: "抖音".into(), enabled: true, keep: vec![":pushservice".into(), ":push".into(), ":pump".into()], freeze_main: true },
+                AppConf { package: "com.tencent.mm".into(), label: "微信".into(), enabled: true, keep: vec![":push".into()], freeze_main: true, power: 2 },
+                AppConf { package: "com.tencent.mobileqq".into(), label: "QQ".into(), enabled: true, keep: vec![":MSF".into(), ":msf".into()], freeze_main: true, power: 2 },
+                AppConf { package: "com.ss.android.ugc.aweme".into(), label: "抖音".into(), enabled: true, keep: vec![":pushservice".into(), ":push".into(), ":pump".into()], freeze_main: true, power: 2 },
             ],
         }
     }
