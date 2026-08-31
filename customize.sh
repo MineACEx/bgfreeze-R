@@ -4,9 +4,9 @@
 #  支持 arm64-v8a / armeabi-v7a
 # ============================================
 
-ui_print "BGFREEZE-R v1.0.10"
+ui_print "BGFREEZE-R v1.0.0"
 ui_print "Rust 后台冻结 · 安装中"
-
+sleep 0.1
 # 架构 -> 选择二进制
 case "$ARCH" in
   arm64|arm64-v8a)      BIN="arm64-v8a" ;;
@@ -20,7 +20,7 @@ if [ "$BIN" != "arm64-v8a" ]; then rm -rf "$MODPATH/bin/arm64-v8a" 2>/dev/null; 
 if [ "$BIN" != "armeabi-v7a" ]; then rm -rf "$MODPATH/bin/armeabi-v7a" 2>/dev/null; fi
 mv "$MODPATH/bin/$BIN/bgfreeze" "$MODPATH/bin/bgfreeze" 2>/dev/null
 rm -rf "$MODPATH/bin/arm64-v8a" "$MODPATH/bin/armeabi-v7a" 2>/dev/null
-
+sleep 0.2
 # 可执行权限
 chmod 0755 "$MODPATH/bin/bgfreeze" 2>/dev/null
 chmod 0755 "$MODPATH/service.sh" 2>/dev/null
@@ -29,6 +29,8 @@ ui_print "- 权限设置完成"
 
 mkdir -p /data/adb/bgfreeze
 ui_print "- 数据目录就绪"
-
+sleep 0.1
 ui_print "- 安装完成，重启后自动生效"
 ui_print "- WebUI：KSU 管理器内打开 / adb forward tcp:8765"
+ui_print
+ui_print "- v1.0.0"
