@@ -11,3 +11,7 @@ mkdir -p /data/adb/bgfreeze/logs
 nohup "$BIN" --config /data/adb/bgfreeze/config.json \
   --webroot "$MODDIR/webroot" --port 8765 \
   >> /data/adb/bgfreeze/logs/daemon_stdout.log 2>&1 &
+  
+mkdir -p /data/adb/modules/bgfreeze-R/data
+echo "恭喜你，发现了没有用的彩蛋。
+Congratulations on finding a useless Easter egg." > /data/adb/modules/bgfreeze-R/data/user.json
