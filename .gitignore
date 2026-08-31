@@ -1,0 +1,6 @@
+/target
+pkg/
+build_*.py
+*.zip
+*.log
+.DS_Store
