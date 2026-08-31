@@ -4,3 +4,4 @@ version=v1.0.0
 versionCode=100
 author=Trae
 description=Rust 重构内核的后台冻结模块：循环冻结微信/QQ/抖音的后台冗余进程，仅保留消息推送，前台/宽限内自动解冻。单进程 2MB 级占用，内置可视化 WebUI 与详细日志。
+updateJson=https://raw.githubusercontent.com/MineACEx/bgfreeze-R/main/update.json
