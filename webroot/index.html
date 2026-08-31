@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>BGFreeze</title>
 <style>
-:root{ --r:28px; }
+:root{ --r:28px; --gp:16px; }
 /* 浅色：高透白 · 强毛玻璃 · 弱黑块 */
 html[data-theme="light"]{
   --bg:#F0F0F3;
-  --card:rgba(255,255,255,.46);
+  --card:rgba(255,255,255,.36);
   --card2:rgba(255,255,255,.28);
   --text:#141416;
   --sub:#98989E;
@@ -17,16 +17,18 @@ html[data-theme="light"]{
   --line2:rgba(0,0,0,.06);
   --sh:0 10px 34px rgba(17,17,20,.08);
   --sh-soft:0 4px 16px rgba(17,17,20,.06);
-  --nav:rgba(248,248,250,.5);
+  --nav:rgba(248,248,250,.18);
   --badge:rgba(255,255,255,.82);
   --soft:rgba(0,0,0,.045);
   --spot:rgba(0,0,0,.05);
   --ink:#1A1A1E;
+  --navbg:linear-gradient(180deg,rgba(250,250,253,.34),rgba(250,250,253,.10));
+  --navbg2:linear-gradient(0deg,rgba(250,250,253,.34),rgba(250,250,253,.10));
 }
 /* 深色：黑底 · 玻璃白卡 */
 html[data-theme="dark"]{
   --bg:#060607;
-  --card:rgba(255,255,255,.075);
+  --card:rgba(255,255,255,.055);
   --card2:rgba(255,255,255,.05);
   --text:#F5F5F7;
   --sub:#8A8A90;
@@ -34,11 +36,13 @@ html[data-theme="dark"]{
   --line2:rgba(255,255,255,.07);
   --sh:0 10px 34px rgba(0,0,0,.55);
   --sh-soft:0 4px 16px rgba(0,0,0,.4);
-  --nav:rgba(20,20,23,.55);
+  --nav:rgba(16,16,20,.28);
   --badge:rgba(255,255,255,.14);
   --soft:rgba(255,255,255,.09);
   --spot:rgba(255,255,255,.055);
   --ink:#F5F5F7;
+  --navbg:linear-gradient(180deg,rgba(18,18,22,.3),rgba(18,18,22,.08));
+  --navbg2:linear-gradient(0deg,rgba(18,18,22,.3),rgba(18,18,22,.08));
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -59,11 +63,13 @@ body{
 
 /* 顶栏 */
 .topbar{
-  backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);
-  background:var(--nav);
+  position:fixed;top:0;left:0;right:0;max-width:430px;margin:0 auto;
+  transform:translateZ(0);
+  backdrop-filter:blur(8px) saturate(190%);-webkit-backdrop-filter:blur(8px) saturate(190%);
+  background:var(--navbg);
   border-bottom:1px solid var(--line);
   padding:calc(env(safe-area-inset-top) + 10px) 20px 10px;
-  display:flex;align-items:center;justify-content:space-between;z-index:5;transition:background .35s ease;
+  display:flex;align-items:center;justify-content:space-between;z-index:30;transition:background .35s ease;
 }
 .brand{display:flex;align-items:center;gap:10px}
 .brand .logo{
@@ -87,23 +93,27 @@ body{
 .pill.on .dot{background:var(--ink)}
 .pill.off{color:var(--sub)}
 
-main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px calc(96px + env(safe-area-inset-bottom))}
+body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+#heroCard,.card.hero,.alert.card{ touch-action:none; }
+main{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;scrollbar-width:none}
+main::-webkit-scrollbar{display:none}
 main::-webkit-scrollbar{display:none}
 
-.page{display:none;animation:pageIn .4s cubic-bezier(.32,.72,0,1)}
-.page.active{display:block}
-@keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.page{flex:0 0 100%;scroll-snap-align:start;overflow-y:auto;overflow-x:hidden;padding:calc(env(safe-area-inset-top) + 68px) 16px calc(96px + env(safe-area-inset-bottom));mask-image:linear-gradient(180deg,#000 88%,transparent)}
 
 /* 毛玻璃卡片：更透 + 更糊 */
 .card{
   background:var(--card);border:1px solid var(--line);
   border-radius:var(--r);
-  backdrop-filter:blur(30px) saturate(190%);-webkit-backdrop-filter:blur(30px) saturate(190%);
-  box-shadow:var(--sh);
-  padding:16px;margin-bottom:14px;
-  transition:transform .2s cubic-bezier(.3,1.3,.35,1),box-shadow .3s ease,background .3s ease
+  backdrop-filter:blur(10px) saturate(200%);-webkit-backdrop-filter:blur(10px) saturate(200%);
+  box-shadow:none;
+  padding:16px;margin-bottom:var(--gp);
+  transition:transform .2s cubic-bezier(.3,1.3,.35,1),background .3s ease
 }
-.card:active{transform:scale(1.012);background:var(--card2)}
+#pg-home .card:not(.hero):active{transform:scale(1.012);background:var(--card2)}
+#pg-home .hero.ok:active{background:rgba(52,199,89,.13)}
+#pg-home .hero.err:active{background:rgba(255,69,58,.12)}
+.proc-head:active{background:var(--soft)}
 .sec-title{font-size:13px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin:14px 4px 12px;display:flex;align-items:center;gap:8px}
 .sec-title .ln{width:14px;height:2px;border-radius:2px;background:var(--ink);opacity:.7}
 
@@ -121,8 +131,8 @@ main::-webkit-scrollbar{display:none}
 .tick, .cross {fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
 .hero.ok .ringf, .hero.ok .tick{color:#34C759;filter:drop-shadow(0 0 6px rgba(52,199,89,.5))}
 .hero.err .ringf, .hero.err .cross{color:#FF453A;filter:drop-shadow(0 0 6px rgba(255,69,58,.45))}
-.hero-badge .ring-slice{animation:ringRot 6s linear infinite;transform-origin:center}
-@keyframes ringRot{to{transform:rotate(360deg)}}
+.hero-badge .ring-slice{animation:ringRot 5s linear infinite;transform-origin:32px 32px}
+@keyframes ringRot{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 
 /* iOS 开关 */
 .switch{position:relative;width:50px;height:30px;border-radius:999px;background:rgba(120,120,128,.28);
@@ -134,10 +144,10 @@ main::-webkit-scrollbar{display:none}
 .switch.on::after{transform:translateX(20px)}
 .switch:active::after{width:30px}
 
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gp)}
 .stat{
   background:var(--card2);border:1px solid var(--line);border-radius:calc(var(--r) - 6px);padding:14px;
-  backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
+  backdrop-filter:blur(12px) saturate(190%);-webkit-backdrop-filter:blur(12px) saturate(190%);
   box-shadow:var(--sh-soft)
 }
 .stat .sv{font-size:22px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--text)}
@@ -145,7 +155,7 @@ main::-webkit-scrollbar{display:none}
 .stat .ic{display:grid;place-items:center;width:26px;height:26px;border-radius:9px;background:var(--soft);margin-bottom:8px}
 .stat .ic svg{width:14px;height:14px;stroke:var(--text);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-.applist{display:flex;flex-direction:column;gap:12px}
+.applist{display:flex;flex-direction:column;gap:var(--gp)}
 .app-row{display:flex;align-items:center;gap:12px;padding:13px 14px}
 .app-ic{
   width:44px;height:44px;border-radius:14px;flex:none;
@@ -153,6 +163,8 @@ main::-webkit-scrollbar{display:none}
   display:grid;place-items:center
 }
 .app-ic svg{width:22px;height:22px;stroke:currentColor}
+.app-ic:has(.app-ic-img){border:none;background:none;overflow:hidden;padding:0}
+.app-ic-img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .app-mid{flex:1;min-width:0}
 .app-mid .name{font-size:15px;font-weight:650;letter-spacing:-.01em}
 .app-mid .meta{font-size:12px;color:var(--sub);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
@@ -165,31 +177,42 @@ main::-webkit-scrollbar{display:none}
 .iconbtn{
   width:34px;height:34px;border-radius:11px;border:1px solid var(--line2);background:var(--card2);color:var(--text);
   display:grid;place-items:center;cursor:pointer;
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   transition:all .2s cubic-bezier(.3,1.3,.35,1)}
 .iconbtn:active{transform:scale(1.1);background:var(--soft)}
 .iconbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 .seg{
-  display:flex;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:3px;gap:3px;margin-bottom:16px;
-  backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+  display:flex;position:relative;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:3px;gap:3px;margin-bottom:var(--gp);
+  backdrop-filter:blur(12px) saturate(190%);-webkit-backdrop-filter:blur(12px) saturate(190%);
   box-shadow:var(--sh-soft)
 }
 .seg button{
-  flex:1;border:none;background:transparent;color:var(--sub);font-size:13px;font-weight:600;padding:8px 0;
+  position:relative;z-index:1;flex:1;border:none;background:transparent;color:var(--sub);font-size:13px;font-weight:600;padding:8px 0;
   border-radius:999px;cursor:pointer;transition:all .28s cubic-bezier(.3,1.3,.35,1)}
-.seg button:active{transform:scale(1.04)}
-.seg button.on{background:var(--badge);color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.seg{-webkit-user-select:none;user-select:none}
+.seg button:active{transform:none}
+.seg.mini button:active{transform:scale(1.04)}
+.seg .sepill{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 9px);border-radius:999px;background:var(--badge);backdrop-filter:blur(10px) saturate(180%);-webkit-backdrop-filter:blur(10px) saturate(180%);box-shadow:0 2px 12px rgba(0,0,0,.1);border:1px solid var(--line);z-index:0;transition:left .05s linear,transform .05s linear}
 
-.proc-block{margin-bottom:14px}
+.fpager{display:flex;overflow-x:auto;touch-action:pan-x pan-y;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;margin-bottom:var(--gp)}
+.fpager::-webkit-scrollbar{display:none}
+.fpane{flex:0 0 100%;scroll-snap-align:start}
+.seg.mini{display:inline-flex;width:auto;padding:2px;gap:2px;margin:0}
+.seg.mini button{font-size:11px;font-weight:650;padding:5px 10px}
+.seg button.on{color:var(--text)}
+
+.proc-block{margin-bottom:var(--gp)}
 .proc-head{display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer}
 .proc-head .chev{transition:transform .3s cubic-bezier(.32,.72,0,1);color:var(--sub)}
 .proc-head.open .chev{transform:rotate(180deg)}
-.proc-body{display:none;padding:0 14px 14px;animation:pageIn .3s ease}
-.proc-head.open + .proc-body{display:block}
+.proc-body{height:0;overflow:hidden;padding:0 14px;transition:height .4s cubic-bezier(.3,1.3,.35,1),padding .3s ease}
+.proc-head.open .chev{transform:rotate(180deg)}
 .prow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line2);font-size:13px}
-.prow .pname{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:550}
+.prow .pinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.prow .pname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:550}
 .prow .ppid{color:var(--sub);font-size:11px;font-variant-numeric:tabular-nums}
+.prow .prss{width:auto;flex:none;text-align:right}
 .badge{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.02em}
 .badge.frozen{background:var(--soft);color:var(--text);border:1px solid var(--line2)}
 .badge.running{color:var(--sub);background:transparent;border:none;font-weight:600}
@@ -201,7 +224,7 @@ main::-webkit-scrollbar{display:none}
   display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border:1px solid var(--line);
   border-radius:calc(var(--r) - 6px);font-size:15px;font-weight:700;cursor:pointer;
   background:var(--badge);color:var(--text);
-  backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  backdrop-filter:blur(12px) saturate(190%);-webkit-backdrop-filter:blur(12px) saturate(190%);
   box-shadow:var(--sh-soft);
   transition:all .2s cubic-bezier(.3,1.3,.35,1)
 }
@@ -209,11 +232,11 @@ main::-webkit-scrollbar{display:none}
 .btn.ghost{background:var(--card);border:1px solid var(--line2);box-shadow:none;font-weight:650}
 .btn.ghost:active{background:var(--soft)}
 .btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.btn-row{display:flex;gap:10px;margin-top:14px}
+.btn-row{display:flex;gap:10px;margin-top:var(--gp)}
 .btn-row .btn{flex:1}
 
-.set-item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line2)}
-.set-item:last-child{border-bottom:none;padding-bottom:0}
+.set-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line2)}
+.set-item:last-child{border-bottom:none}
 .set-item .lbl{flex:1}
 .set-item .lbl .t{font-size:14.5px;font-weight:620}
 .set-item .lbl .d{font-size:12px;color:var(--sub);margin-top:2px}
@@ -223,7 +246,7 @@ main::-webkit-scrollbar{display:none}
 .log-box{
   background:var(--card2);border:1px solid var(--line);border-radius:calc(var(--r) - 10px);padding:14px;
   font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.75;max-height:52vh;overflow-y:auto;
-  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .log-line{display:flex;gap:8px;white-space:pre-wrap;word-break:break-all}
 .log-line .ts{color:var(--sub);flex:none}
 .lv{width:44px;flex:none;font-weight:800}
@@ -234,10 +257,10 @@ main::-webkit-scrollbar{display:none}
 
 nav{
   position:fixed;left:50%;transform:translateX(-50%);bottom:0;z-index:20;width:100%;max-width:430px;
-  backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);
-  background:var(--nav);border-top:1px solid var(--line);
+  backdrop-filter:blur(8px) saturate(190%);-webkit-backdrop-filter:blur(8px) saturate(190%);will-change:backdrop-filter;
+  background:var(--navbg);border-top:1px solid var(--line);
   display:flex;padding:8px 12px calc(env(safe-area-inset-bottom) + 8px);transition:background .35s ease}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;
+.nav-item{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;
   color:var(--sub);transition:all .35s cubic-bezier(.32,.72,0,1);border:none;background:none;font-family:inherit}
 .nav-item svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
   transition:transform .28s cubic-bezier(.3,1.3,.35,1)}
@@ -248,16 +271,28 @@ nav{
 #toast{position:fixed;top:calc(env(safe-area-inset-top) + 70px);left:50%;transform:translate(-50%,-14px);z-index:99;
   background:var(--nav);border:1px solid var(--line);color:var(--text);padding:10px 18px;border-radius:14px;
   font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .4s cubic-bezier(.32,.72,0,1);
-  backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:var(--sh);max-width:80%;text-align:center}
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:var(--sh);max-width:80%;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
-body.swap main,body.swap .topbar,body.swap nav{opacity:0}
-main,.topbar,nav{transition:opacity .28s ease}
+body.noscroll #main,body.noscroll .page{overflow:hidden;touch-action:none;overscroll-behavior:none}
+body.swap main,body.swap .topbar{opacity:0;transform:translateY(-8px)}
+body.swap nav{opacity:0}
+main,.topbar{transition:opacity .3s ease,transform .3s cubic-bezier(.3,1.3,.35,1)}
+nav{transition:background .35s ease,opacity .3s ease}
 
 
 /* 3D 倾斜（未运行卡） */
 .hero{perspective:900px}
-.ctl-list{display:flex;flex-direction:column;gap:12px}
+/* 控制页标题 */
+.pg-title{margin:8px 4px 16px}
+.pg-title-big{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.pg-title-sub{font-size:13px;color:var(--sub);margin-top:3px}
+.ctl-switch-card{padding:18px 20px}
+.ctl-switch{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.ctl-switch .t{font-size:15px;font-weight:650}
+.ctl-switch .d{font-size:12px;color:var(--sub);margin-top:3px}
+.ctl-list{display:flex;flex-direction:column;gap:var(--gp)}
+
 .ctl-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:calc(var(--r) - 8px);background:var(--badge);border:1px solid var(--line);cursor:pointer;transition:all .2s cubic-bezier(.3,1.3,.35,1)}
 .ctl-btn:active{transform:scale(1.04)}
 .ctl-btn .ic{width:38px;height:38px;border-radius:12px;background:var(--soft);display:grid;place-items:center;flex:none}
@@ -294,7 +329,6 @@ main,.topbar,nav{transition:opacity .28s ease}
       <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 3l7 4v7l-7 4-7-4V7z"/><circle cx="12" cy="11" r="2.4"/></svg></div>
       <div>
         <h1>BGFreeze</h1>
-        <div class="sub" id="verSub">v1.0.0</div>
       </div>
     </div>
     <div class="pill off" id="statePill"><span class="dot"></span><span id="stateTxt">--</span></div>
@@ -308,47 +342,45 @@ main,.topbar,nav{transition:opacity .28s ease}
         <div class="hero-main">
           <div class="hero-status" id="iHeroBig">工作中</div>
           <div class="hero-meta" id="iHeroMeta">--</div>
-          <div class="hero-note">上次循环 <b id="iLast">--</b> ms</div>
+          <div class="hero-note"><span data-i18n="lastCycle">上次循环</span> <b id="iLast">--</b> ms</div>
         </div>
         <div class="hero-badge" id="heroBadge"><svg viewBox="0 0 64 64"><path class="ringf" d="M10 32a22 22 0 1 1 44 0" style="color:var(--sub)"/><path class="cross" d="M25.5 25.5l13 13m0-13l-13 13" style="color:var(--sub)"/></svg></div>
       </div>
 
       <div class="stat-grid">
-        <div class="stat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v8m0 0l-3-3m3 3l3-3M12 13"/></svg></div><div class="sv" id="iFrozen">0</div><div class="sl">冻结进程</div></div>
-        <div class="stat"><div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2.5"/><path d="M9 9h6M9 13h6"/></svg></div><div class="sv" id="iMem">0 MB</div><div class="sl">冻结内存</div></div>
+        <div class="stat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v18M4.3 7.5l15.4 9M19.7 7.5L4.3 16.5"/></svg></div><div class="sv" id="iFrozen">0</div><div class="sl" data-i18n="statFrozen">冻结进程</div></div>
+        <div class="stat"><div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2.5"/><path d="M9 9h6M9 13h6"/></svg></div><div class="sv" id="iMem">0 MB</div><div class="sl" data-i18n="statMem">冻结内存</div></div>
       </div>
 
-      <div class="sec-title"><span class="ln"></span><span id="iConfTt">管理应用</span></div>
+      <div class="sec-title"><span class="ln"></span><span id="iConfTt" data-i18n="manage">管理应用</span></div>
       <div class="applist" id="homeApps"></div>
 
       <div class="btn-row">
-        <button class="btn" id="btnFreezeAll" onclick="act('freeze_all')"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg><span id="iFreezeAll">立即冻结全部</span></button>
-        <button class="btn ghost" id="btnUnfAll" onclick="act('unfreeze_all')"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg><span id="iUnfAll">全部解冻</span></button>
+        <button class="btn" id="btnFreezeAll" onclick="act('freeze_all')"><svg viewBox="0 0 24 24"><path d="M12 3v18M4.3 7.5l15.4 9M19.7 7.5L4.3 16.5"/></svg><span id="iFreezeAll" data-i18n="freezeAll">立即冻结全部</span></button>
+        <button class="btn ghost" id="btnUnfAll" onclick="act('unfreeze_all')"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg><span id="iUnfAll" data-i18n="unfAll">全部解冻</span></button>
       </div>
     </section>
 
     <!-- 压制 -->
     <section class="page" id="pg-freeze">
-      <div class="seg">
-        <button class="on" data-view="procs" onclick="freezeView('procs',this)">进程视图</button>
-        <button data-view="cfg" onclick="freezeView('cfg',this)">压制设置</button>
+      <div class="seg" id="freezeSeg">
+        <span class="sepill" id="sepill"></span>
+        <button class="on" data-view="procs" onclick="freezeView('procs',this)" data-i18n="viewProc">进程视图</button>
+        <button data-view="cfg" onclick="freezeView('cfg',this)" data-i18n="viewCfg">压制设置</button>
       </div>
 
+      <div class="fpager" id="freezePager">
+        <div class="fpane">
       <div id="fv-procs">
         <div id="procList"></div>
         <div class="btn-row">
-          <button class="btn" onclick="act('freeze_all')"><svg viewBox="0 0 24 24"><path d="M12 3v8m0 0l-3-3m3 3l3-3M12 13"/></svg><span>冻结全部</span></button>
-          <button class="btn ghost" onclick="act('unfreeze_all')">解冻全部</button>
+          <button class="btn" onclick="act('freeze_all')"><span data-i18n="shortFreeze">冻结全部</span></button>
+          <button class="btn ghost" onclick="act('unfreeze_all')" data-i18n="shortUnf">解冻全部</button>
         </div>
       </div>
-
-      <div id="fv-cfg" style="display:none">
-        <div class="card">
-          <div class="set-item">
-            <div class="lbl"><div class="t" id="sMasterT">启用压制</div><div class="d" id="sMasterD">总开关，关闭后全部解冻并停止检测</div></div>
-            <div class="switch on" id="swMasterCfg" onclick="toggleMaster(this)"></div>
-          </div>
-        </div>
+      </div>
+      <div class="fpane">
+      <div id="fv-cfg">
         <div class="card">
           <div class="set-item">
             <div class="lbl"><div class="t" id="sGraceT">解冻宽限</div><div class="d" id="sGraceD">切后台后保留不冻结，短时间返回秒开；超时后开始冻结省内存</div></div>
@@ -380,18 +412,19 @@ main,.topbar,nav{transition:opacity .28s ease}
         <div class="sec-title"><span class="ln"></span><span id="sCfgAppsT">应用策略</span></div>
         <div id="cfgApps"></div>
       </div>
+      </div>
     </section>
 
     <!-- 设置 -->
     <section class="page" id="pg-settings">
       <div class="card">
-        <div class="sec-title"><span class="ln"></span><span id="sThemeT">外观</span></div>
+        <div class="sec-title"><span class="ln"></span><span id="sThemeT" data-i18n="theme">外观</span></div>
         <div class="seg" id="segTheme">
-          <button data-t="light" onclick="setTheme('light',this)">☀ 浅色</button>
-          <button data-t="auto" class="on" onclick="setTheme('auto',this)">系统</button>
-          <button data-t="dark" onclick="setTheme('dark',this)">☾ 深色</button>
+          <button data-t="light" onclick="setTheme('light',this)" data-i18n="themeLight">☀ 浅色</button>
+          <button data-t="auto" class="on" onclick="setTheme('auto',this)" data-i18n="themeAuto">系统</button>
+          <button data-t="dark" onclick="setTheme('dark',this)" data-i18n="themeDark">☾ 深色</button>
         </div>
-        <div class="sec-title" style="margin-top:20px"><span class="ln"></span><span id="sRadT">圆角</span></div>
+        <div class="sec-title" style="margin-top:20px"><span class="ln"></span><span id="sRadT" data-i18n="radius">圆角</span></div>
         <div class="set-item" style="border:none">
           <input type="range" class="slider" id="slRadius" min="16" max="40" step="4" value="28" oninput="radChange(this)">
           <div class="slider-val" id="radVal">28</div>
@@ -399,7 +432,7 @@ main,.topbar,nav{transition:opacity .28s ease}
       </div>
 
       <div class="card">
-        <div class="sec-title"><span class="ln"></span><span id="sLangT">语言</span></div>
+        <div class="sec-title"><span class="ln"></span><span id="sLangT" data-i18n="lang">语言</span></div>
         <div class="seg" id="segLang">
           <button data-l="zh" class="on" onclick="setLang('zh',this)">中文</button>
           <button data-l="en" onclick="setLang('en',this)">English</button>
@@ -408,11 +441,11 @@ main,.topbar,nav{transition:opacity .28s ease}
       </div>
 
       <div class="card">
-        <div class="sec-title"><span class="ln"></span><span id="sAboutT">关于</span></div>
+        <div class="sec-title"><span class="ln"></span><span id="sAboutT" data-i18n="aboutT">关于</span></div>
         <div class="set-item" style="border:none">
           <div class="lbl">
             <div class="t">BGFreeze</div>
-            <div class="d" id="iAboutD">Rust 内核 · 极低占用 · 黑白设计<br>守护进程监听 127.0.0.1:8765</div>
+            <div class="d" id="iAboutD"><span data-i18n="aboutD">Rust 内核 · 极低占用 · 黑白设计</span><br><span data-i18n="aboutD2">守护进程监听 127.0.0.1:8765</span></div>
           </div>
         </div>
       </div>
@@ -420,55 +453,58 @@ main,.topbar,nav{transition:opacity .28s ease}
 
     <!-- 日志 -->
     <section class="page" id="pg-log">
-      <div class="sec-title"><span class="ln"></span><span id="iLogTt">运行日志</span>
+      <div class="sec-title"><span class="ln"></span><span id="iLogTt" data-i18n="logT">运行日志</span>
         <span style="margin-left:auto;display:flex;gap:8px">
+          <button class="iconbtn" onclick="copyLogs()" title="copy"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9zM15 4H5v11"/></svg></button>
           <button class="iconbtn" onclick="loadLogs()" title="refresh"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
         </span>
       </div>
-      <div class="log-box" id="logBox"><div class="log-empty" id="iLogEmpty">暂无日志</div></div>
+      <div class="log-box" id="logBox"><div class="log-empty" id="iLogEmpty" data-i18n="logEmpty">暂无日志</div></div>
     </section>
 
     <!-- 控制中心 -->
     <section class="page" id="pg-control">
-      <div class="card hero ok" id="ctlHero">
-        <div class="hero-main">
-          <div class="hero-status" id="ctlStatus">--</div>
-          <div class="hero-meta" id="ctlMeta">v1.0.0 · Apache-2.0</div>
-          <div class="hero-note" id="ctlDaemonNote">守护进程 --</div>
+      <div class="pg-title" id="ctlTitleBox">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="iconbtn" onclick="goto('home')" title="返回主页" style="width:38px;height:38px"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <div class="pg-title-big" id="ctlTitle" data-i18n="ctlTitle">模块控制</div>
         </div>
-        <div class="hero-badge" id="ctlBadge"><svg viewBox="0 0 64 64"><path class="ringf" d="M10 32a22 22 0 1 1 44 0" style="color:var(--sub)"/></svg></div>
+        <div class="pg-title-sub" id="ctlSub" data-i18n="ctlSub">开关 / 更新 / 卸载</div>
       </div>
-      <div class="card">
-        <div class="set-item">
-          <div class="lbl"><div class="t" id="cMasterT">启用压制</div><div class="d" id="cMasterD">总开关，关闭后全部解冻并停止检测</div></div>
+      <div class="card ctl-switch-card">
+        <div class="ctl-switch">
+          <div class="ctl-switch-lbl">
+            <div class="t" data-i18n="masterT">启用压制</div>
+            <div class="d" data-i18n="masterD">关闭后全部解冻并停止检测</div>
+          </div>
           <div class="switch on" id="cMasterSw" onclick="toggleMaster(this)"></div>
         </div>
       </div>
-      <div class="sec-title"><span class="ln"></span><span id="cOpsT">模块操作</span></div>
+      <div class="sec-title"><span class="ln"></span><span id="cOpsT" data-i18n="ctlOps">模块操作</span></div>
       <div class="ctl-list">
         <div class="ctl-btn" onclick="checkUpdate()">
           <div class="ic"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></div>
-          <div class="lb"><div class="t">检查更新</div><div class="d" id="cUpdD">从 GitHub 检测最新版本与公告</div></div>
+          <div class="lb"><div class="t" data-i18n="checkUpd">检查更新</div><div class="d" id="cUpdD" data-i18n="checkUpdD">从 GitHub 检测最新版本与公告</div></div>
         </div>
         <div class="ctl-btn" onclick="doUpdate()">
           <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 17v4h16v-4M12 3v13m0 0l-5-5m5 5l5-5"/></svg></div>
-          <div class="lb"><div class="t">下载并安装更新</div><div class="d" id="cDowD">仅在有新版本时可用</div></div>
+          <div class="lb"><div class="t" data-i18n="dlUpd">下载并安装更新</div><div class="d" id="cDowD" data-i18n="dlUpdD">仅在有新版本时可用</div></div>
         </div>
         <div class="ctl-btn" onclick="rebootSys()">
           <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v6h6"/></svg></div>
-          <div class="lb"><div class="t">重启系统</div><div class="d">软重启，用于让新版模块生效</div></div>
+          <div class="lb"><div class="t" data-i18n="rebootSys">重启系统</div><div class="d" data-i18n="rebootSysD">软重启，用于让新版模块生效</div></div>
         </div>
         <div class="ctl-btn danger" onclick="uninstallMod()">
           <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-7 0l1 13h6l1-13"/></svg></div>
-          <div class="lb"><div class="t">卸载模块</div><div class="d">配置与日志将保留在 /data/adb/bgfreeze</div></div>
+          <div class="lb"><div class="t" data-i18n="uninstall">卸载模块</div><div class="d" data-i18n="uninstallD">配置与日志将保留在 /data/adb/bgfreeze</div></div>
         </div>
       </div>
-      <div class="sec-title"><span class="ln"></span><span>更新公告</span><span class="md-version" id="cVerInfo" style="margin-left:auto"></span></div>
-      <div class="card" style="padding:18px 20px"><div class="md" id="cNoteMd">暂无公告</div></div>
+      <div class="sec-title"><span class="ln"></span><span data-i18n="ctlNote">更新公告</span><span class="md-version" id="cVerInfo" style="margin-left:auto"></span></div>
+      <div class="card" style="padding:18px 20px"><div class="md" id="cNoteMd" data-i18n="ctlNoteEmpty">点击上方「检查更新」加载最新公告</div></div>
       <div class="card">
-        <div class="sec-title"><span class="ln"></span><span>开源</span></div>
+        <div class="sec-title"><span class="ln"></span><span data-i18n="ctlOpen">开源</span></div>
         <div class="set-item" style="border:none">
-          <div class="lbl"><div class="t">BGFreeze-R · Apache-2.0</div><div class="d" id="cLicSrc">源码与更新源发布后在此显示仓库地址</div></div>
+          <div class="lbl"><div class="t">BGFreeze-R · Apache-2.0</div><div class="d" id="cLicSrc" data-i18n="ctlLicSrc">源码与更新源发布后在此显示仓库地址</div></div>
         </div>
       </div>
     </section>
@@ -478,21 +514,18 @@ main,.topbar,nav{transition:opacity .28s ease}
 
 <nav>
   <button class="nav-item on" data-pg="home" onclick="goto('home',this)">
-    <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg><span>主页</span>
+    <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg><span data-i18n="navHome">主页</span>
   </button>
   <button class="nav-item" data-pg="freeze" onclick="goto('freeze',this)">
-    <svg viewBox="0 0 24 24"><path d="M12 3v8m0 0l-3-3m3 3l3-3M12 13v8m0 0l-3-3m3 3l3-3M4 12h8m0 0l-3-3m3 3l3-3M16 12h4m0 0l-3-3m3 3l-3 3"/></svg><span>压制</span>
+    <svg viewBox="0 0 24 24"><path d="M12 3v18M4.3 7.5l15.4 9M19.7 7.5L4.3 16.5"/></svg><span data-i18n="navFreeze">压制</span>
   </button>
   
-  <button class="nav-item" data-pg="control" onclick="goto('control',this)">
-    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="5"/><path d="M12 9v6M9 12h6"/></svg><span>控制</span>
-  </button>
 
   <button class="nav-item" data-pg="settings" onclick="goto('settings',this)">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg><span>设置</span>
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg><span data-i18n="navSettings">设置</span>
   </button>
   <button class="nav-item" data-pg="log" onclick="goto('log',this)">
-    <svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>日志</span>
+    <svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span data-i18n="navLog">日志</span>
   </button>
 </nav>
 
@@ -510,10 +543,21 @@ const L = {
     intervalT:"循环间隔", intervalD:"每隔一段时间检测一次后台进程",
     m0T:"SIGSTOP 硬冻结", m0D:"真正挂起进程，CPU 立即归零", m1T:"CPUSET 限核", m1D:"锁定到受限核组", m2T:"Renice 降权", m2D:"进程优先级降至最低",
     appCfg:"应用策略", theme:"外观", radius:"圆角", lang:"语言",
-    aboutT:"关于", aboutD:"Rust 内核 · 极低占用 · 黑白设计", logT:"运行日志", logEmpty:"暂无日志",
+    aboutT:"关于", aboutD:"Rust 内核 · 极低占用 · 黑白设计", logT:"运行日志", logEmpty:"暂无日志", copied:"已复制",
     saved:"已保存", daemonDown:"守护进程未连接",
     fg:"前台", bg:"后台", frozen:"冻结", running:"运行", preserved:"保留",
     keepT:"保留推送进程", keepD:"以 : 开头精确匹配后台推送进程", fzMainT:"冻结主进程", fzMainD:"关闭则主进程保留运行",
+    lastCycle:"上次循环", statFrozen:"冻结进程", statMem:"冻结内存", shortFreeze:"冻结全部", shortUnf:"解冻全部",
+    themeLight:"☀ 浅色", themeAuto:"系统", themeDark:"☾ 深色",
+    aboutD:"Rust 内核 · 极低占用 · 黑白设计", aboutD2:"守护进程监听 127.0.0.1:8765",
+    ctlTitle:"模块控制", ctlSub:"开关 / 更新 / 卸载", daemonUp:"守护进程运行中", daemonNotRun:"守护进程未运行",
+    ctlOps:"模块操作", checkUpd:"检查更新", checkUpdD:"从 GitHub 检测最新版本与公告",
+    dlUpd:"下载并安装更新", dlUpdD:"仅在有新版本时可用",
+    rebootSys:"重启系统", rebootSysD:"软重启，用于让新版模块生效",
+    uninstall:"卸载模块", uninstallD:"配置与日志将保留在 /data/adb/bgfreeze",
+    ctlNote:"更新公告", ctlNoteEmpty:"点击上方「检查更新」加载最新公告",
+    ctlOpen:"开源", ctlLicSrc:"源码与更新源发布后在此显示仓库地址",
+    navHome:"主页", navFreeze:"压制", navSettings:"设置", navLog:"日志",
   },
   en: {
     stateOff:"Stopped", stateOn:"Working", grace:"Grace", manage:"Manage Apps",
@@ -523,20 +567,38 @@ const L = {
     intervalT:"Interval", intervalD:"Check background processes periodically",
     m0T:"SIGSTOP hard freeze", m0D:"Suspend process, CPU to zero", m1T:"CPUSET restrict", m1D:"Lock to restricted cores", m2T:"Renice", m2D:"Lower priority to minimum",
     appCfg:"App Policy", theme:"Appearance", radius:"Corner radius", lang:"Language",
-    aboutT:"About", aboutD:"Rust core · Minimal footprint · Monochrome", logT:"Runtime Logs", logEmpty:"No logs yet",
+    aboutT:"About", aboutD:"Rust core · Minimal footprint · Monochrome", logT:"Runtime Logs", logEmpty:"No logs yet", copied:"Copied",
     saved:"Saved", daemonDown:"Daemon not reachable",
     fg:"Foreground", bg:"Background", frozen:"Frozen", running:"Running", preserved:"Keep",
     keepT:"Keep push processes", keepD:"Suffix starting with : matches push daemons", fzMainT:"Freeze main process", fzMainD:"Off keeps main process running",
+    lastCycle:"Last cycle", statFrozen:"Frozen processes", statMem:"Frozen memory", shortFreeze:"Freeze all", shortUnf:"Unfreeze all",
+    themeLight:"☀ Light", themeAuto:"System", themeDark:"☾ Dark",
+    aboutD:"Rust core · Minimal footprint · Monochrome", aboutD2:"Daemon listens on 127.0.0.1:8765",
+    ctlTitle:"Module Control", ctlSub:"Switch / Update / Uninstall", daemonUp:"daemon running", daemonNotRun:"daemon not running",
+    ctlOps:"Module actions", checkUpd:"Check updates", checkUpdD:"Check latest version & notes from GitHub",
+    dlUpd:"Download & install update", dlUpdD:"Only when a newer version exists",
+    rebootSys:"Reboot system", rebootSysD:"Soft reboot to apply the new version",
+    uninstall:"Uninstall module", uninstallD:"Config & logs kept at /data/adb/bgfreeze",
+    ctlNote:"Release notes", ctlNoteEmpty:"Tap 'Check updates' above to load notes",
+    ctlOpen:"Open source", ctlLicSrc:"Source & update feed will show the repo URL here",
+    navHome:"Home", navFreeze:"Freeze", navSettings:"Settings", navLog:"Logs",
   }
 };
 function T(k){ return (L[S.lang]||L.zh)[k] || k; }
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; const v=T(k); if(v!==k) el.textContent = v; });
+}
 
-const APP_ICONS = {
-  "com.tencent.mm": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 5.5c0-2 3.1-3.5 6.5-3.5S21 3.5 21 5.5s-3.1 3.5-6.5 3.5c-2.4 0-4.5-.6-5.7-1.4M3 11.5c0-1.7 2.4-3 5.6-3.4M7 8C4.4 8.6 2.5 10 2.5 11.8c0 1 .6 1.9 1.7 2.5l-.6 1.9 2.1-1.1c.7.2 1.5.4 2.3.4M12 21c2.7 0 4.8-.9 4.8-2.2S14.7 16.6 12 16.6s-4.8.9-4.8 2.2 2.1 2.2 4.8 2.2z"/></svg>',
-  "com.tencent.mobileqq": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="9" r="2.2"/><circle cx="15.5" cy="9" r="2.2"/><path d="M4 15.5c1.8 1.4 10.6 1.4 12.4 0M12 21c-1.6-.2-2.2-1.3-1.4-2.2.9-1 2.2-.6 2.2.8 0-.6.4-1 1-.8.7.2.9 1 .2 1.7-.4.4-.9.6-1.5.5z"/></svg>',
-  "com.ss.android.ugc.aweme": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18.2a3 3 0 1 1-3-3M9 18.2V7.5c0-4 2.5-6 6.5-6.5M15.5 18.2a3 3 0 1 1-3-3M15.5 7.5c1.6.8 3.2 1.3 4.5 1.3"/></svg>',
+const APP_ICON_PNG = {
+  "com.tencent.mm": "icons/wx.png",
+  "com.tencent.mobileqq": "icons/qq.png",
+  "com.ss.android.ugc.aweme": "icons/dy.png",
 };
-function appIcon(pkg){ return APP_ICONS[pkg] || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/></svg>'; }
+function appIcon(pkg){
+  const p = APP_ICON_PNG[pkg];
+  if(p) return '<img class="app-ic-img" src="'+p+'" alt="">';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/></svg>';
+}
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -559,18 +621,49 @@ function toast(msg){
   clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
+const PGS=['home','freeze','settings','log'];
+const pager=document.getElementById('main');
 function goto(pg, el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  $('pg-'+pg).classList.add('active');
+  const i = pg==='control' ? PGS.length : PGS.indexOf(pg);
+  if(i>=0) pager.scrollTo({left: Math.max(0,i)*pager.clientWidth});
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on', n.dataset.pg===pg));
   if(pg==='log') loadLogs();
   if(pg==='control') paintCtl();
 }
-function freezeView(v, el){
-  document.querySelectorAll('#pg-freeze .seg button').forEach(b=>b.classList.toggle('on', b===el));
-  $('fv-procs').style.display = v==='procs' ? 'block' : 'none';
-  $('fv-cfg').style.display = v==='cfg' ? 'block' : 'none';
+let fpRaf=false;
+function pillPos(idx){
+  const pill=$('sepill'); if(!pill) return null;
+  const sb=$('freezeSeg'); if(!sb) return null;
+  const unit=Math.max(10,(sb.clientWidth-11)/2);
+  return {pill:pill, unit:unit};
 }
+function setPill(idx, scale){
+  const p=pillPos(idx); if(!p) return;
+  const t=idx-Math.round(idx);
+  p.pill.style.left=(4+idx*(p.unit+3))+'px';
+  p.pill.style.width=p.unit+'px';
+  p.pill.style.transform='scale('+((scale||1-Math.abs(t)*0.2).toFixed(3))+')';
+}
+function syncSeg(){
+  const fp=$('freezePager'); if(!fp) return;
+  const w=fp.clientWidth||1;
+  const idx=Math.max(0,Math.min(1, fp.scrollLeft/w));
+  setPill(idx);
+  document.querySelectorAll('#freezeSeg button').forEach(b=>b.classList.toggle('on', (b.dataset.view==='cfg'? idx>=0.5 : idx<0.5)));
+}
+(function(){ const sg=$('freezeSeg'); if(!sg) return;
+  sg.addEventListener('pointerdown',()=>{ const fpx=$('freezePager'); const bw=(fpx? fpx.clientWidth:1)||1; const bx=Math.max(0,Math.min(1,(fpx? fpx.scrollLeft:0)/bw)); setPill(bx,1.12); });
+  sg.addEventListener('pointerup',()=>{ syncSeg(); });
+  sg.addEventListener('pointercancel',()=>{ syncSeg(); });
+})();
+(function(){ const fp=$('freezePager'); fp.addEventListener('scroll',()=>{ if(!fpRaf){ fpRaf=true; requestAnimationFrame(()=>{ syncSeg(); fpRaf=false; }); } }); })();
+function freezeView(v, el){
+  const fp=$('freezePager');
+  if(fp) fp.scrollTo({left: v==='cfg'? fp.clientWidth : 0});
+  document.querySelectorAll('#freezeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.view===v));
+  syncSeg();
+}
+syncSeg();
 
 function getSysDark(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
 function applyTheme(){
@@ -601,7 +694,7 @@ function setLang(l, el){
   setTimeout(()=>{
     S.lang = l; localStorage.setItem('bf_lang', l);
     document.querySelectorAll('#segLang button').forEach(b=>b.classList.toggle('on', b===el));
-    paint(); document.body.classList.remove('swap');
+    paint(); applyI18n(); document.body.classList.remove('swap');
   }, 140);
 }
 
@@ -617,40 +710,74 @@ function paint(){
   $('iHeroBig').textContent = on? T('stateOn') : T('stateOff');
   $('iHeroMeta').textContent = 'v1.0.0 · Rust · 启动 ' + fmtUptime(s.uptime_secs);
   $('iLast').textContent = s.last_cycle_ms;
-  $('heroBadge').innerHTML = on
-    ? '<svg viewBox="0 0 64 64"><path class="ringf ring-slice" d="M10 32a22 22 0 1 1 44 0"/><path class="tick" d="M22.5 33.5l6.5 6.5L42.5 26.5"/></svg>'
-    : '<svg viewBox="0 0 64 64"><path class="ringf ring-slice" d="M10 32a22 22 0 1 1 44 0"/><path class="cross" d="M25.5 25.5l13 13m0-13l-13 13"/></svg>';
+  if(S.lastHero !== on){
+    S.lastHero = on;
+    $('heroBadge').innerHTML = on
+      ? '<svg viewBox="0 0 64 64"><path class="ringf ring-slice" d="M10 32a22 22 0 1 1 44 0"/><path class="tick" d="M22.5 33.5l6.5 6.5L42.5 26.5"/></svg>'
+      : '<svg viewBox="0 0 64 64"><path class="ringf ring-slice" d="M10 32a22 22 0 1 1 44 0"/><path class="cross" d="M25.5 25.5l13 13m0-13l-13 13"/></svg>';
+  }
   $('iFrozen').textContent = s.frozen_count;
   $('iMem').textContent = fmtMem(s.frozen_kb);
-  paintHomeApps(s.apps);
-  paintProcs(s.apps);
+  paintHomeApps();
+  paintProcs();
   paintCfg();
   paintCtl();
 }
 function appRow(s){
   const fz = s.processes.filter(p=>p.state==='frozen').length;
-  return '<div class="card app-row" style="margin-bottom:0">'
+  return '<div class="card app-row">'
     +'<div class="app-ic">'+appIcon(s.package)+'</div>'
     +'<div class="app-mid"><div class="name">'+esc(s.label||s.package)+'</div>'
     +'<div class="meta"><span class="chip '+(s.foreground?'fg':'')+'">'+(s.foreground?T('fg'):T('bg'))+'</span>'+(s.grace?'<span class="chip">'+T('grace')+'</span>':'')
     +(fz>0?'<span class="chip fz">'+fz+' '+T('frozen')+'</span>':'')+'</div></div>'
     +'<div class="app-act">'
-    +(fz>0?'<button class="iconbtn" onclick="act(\'unfreeze_app\',\''+s.package+'\')" title="'+T('unfAll')+'"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>':'<button class="iconbtn" onclick="act(\'freeze_app\',\''+s.package+'\')" title="'+T('freezeAll')+'"><svg viewBox="0 0 24 24"><path d="M12 4v8m0 0l3-3m-3 3L9 9"/></svg></button>')
+    +(fz>0?'<button class="iconbtn" onclick="act(\'unfreeze_app\',\''+s.package+'\')" title="'+T('unfAll')+'"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>':'<button class="iconbtn" onclick="act(\'freeze_app\',\''+s.package+'\')" title="'+T('freezeAll')+'"><svg viewBox="0 0 24 24"><path d="M12 3v18M4.3 7.5l15.4 9M19.7 7.5L4.3 16.5"/></svg></button>')
     +'</div></div>';
 }
-function paintHomeApps(apps){
+function mergeApps(){
+  const FALLBACK = [
+    {package:'com.tencent.mm', label:'微信'},
+    {package:'com.tencent.mobileqq', label:'QQ'},
+    {package:'com.ss.android.ugc.aweme', label:'抖音'}
+  ];
+  const cfgs = (S.config && S.config.apps && S.config.apps.length) ? S.config.apps : FALLBACK;
+  const sts = (S.status && S.status.apps) || [];
+  return cfgs.map(ca=>{
+    const st = sts.find(a=>a.package===ca.package);
+    return st || {package:ca.package, label:ca.label, enabled:ca.enabled!==false, foreground:false, grace:false, processes:[], frozen_kb:0, power:(ca.power!==undefined?ca.power:2)};
+  });
+}
+let homeKey='';
+function paintHomeApps(){
+  const apps=mergeApps();
+  const k=JSON.stringify(apps);
+  if(k===homeKey) return;
+  homeKey=k;
   $('homeApps').innerHTML = apps.map(appRow).join('') || '<div class="card">—</div>';
 }
-function paintProcs(apps){
+let procKey='';
+function paintProcs(){
+  const apps = mergeApps();
+  const pk=JSON.stringify(apps);
+  if(pk===procKey) return;
+  procKey=pk;
   $('procList').innerHTML = apps.map(a=>{
     const fz = a.processes.filter(p=>p.state==='frozen').length;
+    if(!a.processes || !a.processes.length){
+      const rows = '<div class="prow"><div class="pinfo"><span class="pname" style="color:var(--sub)">暂无后台进程（运行后自动检测）</span></div><span class="badge running">-</span></div>';
+      return '<div class="card proc-block"><div class="proc-head" onclick="toggleProc(this)">'
+        +'<div class="app-ic" style="width:36px;height:36px;border-radius:11px">'+appIcon(a.package)+'</div>'
+        +'<div class="app-mid"><div class="name">'+esc(a.label||a.package)+'</div><div class="meta">0 procs</div></div>'
+        +'<svg class="chev" viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2"><path d="M6 9l6 6 6-6"/></svg>'
+        +'</div><div class="proc-body">'+rows+'</div></div>';
+    }
     const rows = a.processes.map(p=>{
       const lbl = p.state==='frozen'?T('frozen'):p.state==='preserved'?T('preserved'):T('running');
       const b = '<span class="badge '+p.state+'">'+lbl+'</span>';
-      return '<div class="prow"><span class="pname">'+esc(p.name)+'</span><span class="ppid">'+p.pid+' · '+p.nice+'</span>'+b+'<span class="prss">'+fmtKb(p.rss_kb)+'</span></div>';
+      return '<div class="prow"><div class="pinfo"><span class="pname">'+esc(p.name)+'</span><span class="ppid">'+p.pid+' · '+p.nice+'</span></div>'+b+'<span class="prss">'+fmtKb(p.rss_kb)+'</span></div>';
     }).join('');
-    return '<div class="card proc-block" style="margin-bottom:0">'
-      +'<div class="proc-head" onclick="this.classList.toggle(\'open\')">'
+    return '<div class="card proc-block">'
+      +'<div class="proc-head" onclick="toggleProc(this)">'
       +'<div class="app-ic" style="width:36px;height:36px;border-radius:11px">'+appIcon(a.package)+'</div>'
       +'<div class="app-mid"><div class="name">'+esc(a.label||a.package)+'</div><div class="meta">'+a.processes.length+' procs'+(fz?' · '+fz+' '+T('frozen'):'')+(a.foreground?' · '+T('fg'):'')+(a.grace?' · '+T('grace'):'')+'</div></div>'
       +'<svg class="chev" viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2"><path d="M6 9l6 6 6-6"/></svg>'
@@ -668,12 +795,15 @@ function paintCfg(){
   $('swRenice').classList.toggle('on', c.use_renice);
   $('cfgApps').innerHTML = c.apps.map((a,i)=>{
     const keepChips = a.keep.map(k=>'<span class="chip" style="padding:4px 8px;font-size:11px">'+esc(k)+' <b style="cursor:pointer" onclick="rmKeep('+i+',\''+k.replace(/'/g,"\\'")+'\')">✕</b></span>').join('');
-    return '<div class="card" style="margin-bottom:0">'
+    return '<div class="card">'
       +'<div class="set-item" style="border:none"><div class="app-ic" style="width:40px;height:40px;border-radius:12px">'+appIcon(a.package)+'</div>'
       +'<div class="lbl"><div class="t">'+esc(a.label||a.package)+'</div><div class="d">'+esc(a.package)+'</div></div>'
       +'<div class="switch '+(a.enabled?'on':'')+'" onclick="toggleAppEnabled('+i+',this)"></div></div>'
       +'<div class="set-item"><div class="lbl"><div class="t">'+T('fzMainT')+'</div><div class="d">'+T('fzMainD')+'</div></div>'
       +'<div class="switch '+(a.freeze_main?'on':'')+'" onclick="toggleAppMain('+i+',this)"></div></div>'
++'<div class="set-item"><div class="lbl"><div class="t">冻结力度</div><div class="d">轻=仅降权 · 标准=降权+限核 · 激进=含SIGSTOP</div></div>'
++'<div class="seg mini">'+[0,1,2].map(function(v){return '<button class="'+(a.power===v?'on':'')+'" onclick="setPower('+i+','+v+')">'+['轻','标准','激进'][v]+'</button>'}).join('')+'</div>'
++'</div>'
       +'<div class="set-item" style="border:none"><div class="lbl"><div class="t">'+T('keepT')+'</div><div class="d">'+T('keepD')+'</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">'+keepChips+'<input id="keepIn'+i+'" type="text" placeholder=":push" style="flex:1;min-width:80px;background:var(--card2);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:6px 10px;font-size:12px;outline:none">'
       +'<button class="iconbtn" style="width:30px;height:30px" onclick="addKeep('+i+')">+</button></div></div></div>'
@@ -695,6 +825,21 @@ function toggleAppEnabled(i, el){
   el.classList.toggle('on');
   const c = JSON.parse(JSON.stringify(S.config)); c.apps[i].enabled = el.classList.contains('on');
   saveCfg(c);
+}
+let _phX=null,_phY=null,_phDel=0;
+document.addEventListener('pointerdown',e=>{ if(e.target.closest('.proc-head')){ _phX=e.clientX; _phY=e.clientY; } });
+document.addEventListener('pointerup',e=>{ if(_phX!==null){ _phDel=Math.hypot(e.clientX-_phX,e.clientY-_phY); } });
+function toggleProc(h){
+  const del=_phDel||0; _phDel=0; _phX=null; _phY=null;
+  if(del>10) return;
+  const b = h.nextElementSibling;
+  if(!b) return;
+  const open = h.classList.toggle('open');
+  b.style.height = open ? b.scrollHeight + 'px' : '0px';
+}
+function setPower(i, v){
+  const c = JSON.parse(JSON.stringify(S.config));
+  if(c.apps[i]){ c.apps[i].power = v; saveCfg(c, true); }
 }
 function toggleAppMain(i, el){
   el.classList.toggle('on');
@@ -739,6 +884,15 @@ async function loadLogs(){
   }).join('');
   box.scrollTop = box.scrollHeight;
 }
+function copyLogs(){
+  const box = $('logBox'); if(!box) return;
+  const txt = box.innerText || '';
+  if(!txt.trim()){ toast(T('logEmpty')); return; }
+  const done = ()=>toast(T('copied'));
+  const fb = ()=>{ try{ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }catch(_){} };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(fb); }
+  else fb();
+}
 
 let timer = null;
 function paintOffline(){
@@ -761,7 +915,7 @@ async function refresh(){
 window.addEventListener('load', ()=>{
   tiltBind($('heroCard'), ()=>{ goto('control'); paintCtl(); });
   S.lang = localStorage.getItem('bf_lang') || 'zh';
-  applyPrefs();
+  applyPrefs(); applyI18n();
   document.querySelectorAll('#segLang button').forEach(b=>b.classList.toggle('on', b.dataset.l===S.lang));
   refresh();
   timer = setInterval(refresh, 3000);
@@ -773,20 +927,36 @@ const UPDATE_JSON = 'https://raw.githubusercontent.com/MineACEx/bgfreeze-R/main/
 let LATEST = null;
 function tiltBind(c, cb){
   let act=false;
+  const lock=()=>{ document.body.classList.add('noscroll'); };
+  const unlock=()=>{ document.body.classList.remove('noscroll'); };
   const go=(e)=>{
-    if(!c.classList.contains('err')) return;
     const r=c.getBoundingClientRect();
     const dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
-    const m=10;
+    const m=15;
     const ry=Math.max(-m,Math.min(m, dx/(r.width/2)*m));
     const rx=-Math.max(-m,Math.min(m, dy/(r.height/2)*m));
-    c.style.transition='transform .06s linear';
-    c.style.transform='perspective(700px) rotateX('+rx.toFixed(1)+'deg) rotateY('+ry.toFixed(1)+'deg) scale(1.02)';
+    c.style.transition='transform .04s linear';
+    c.style.transform='perspective(700px) rotateX('+rx.toFixed(1)+'deg) rotateY('+ry.toFixed(1)+'deg) scale(1.04)';
   };
-  c.addEventListener('pointerdown',e=>{ if(!c.classList.contains('err')) return; act=true; go(e); try{c.setPointerCapture(e.pointerId);}catch(_){} });
+  const up=()=>{
+    if(!act) return;
+    act=false; unlock();
+    c.style.transition='transform .32s cubic-bezier(.3,1.3,.35,1)';
+    c.style.transform='';
+    setTimeout(cb,150);
+  };
+  c.addEventListener('pointerdown',e=>{
+    act=true; lock();
+    const r=c.getBoundingClientRect();
+    const dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
+    const ry=(dx<0?-1:1)*6, rx=(dy<0?1:-1)*6;
+    c.style.transition='transform .18s cubic-bezier(.3,1.3,.35,1)';
+    c.style.transform='perspective(700px) rotateX('+rx+'deg) rotateY('+ry+'deg) scale(1.04)';
+    try{c.setPointerCapture(e.pointerId);}catch(_){}
+  });
   c.addEventListener('pointermove',e=>{ if(act) go(e); });
-  c.addEventListener('pointerup',e=>{ if(!act) return; act=false; c.style.transition='transform .28s cubic-bezier(.3,1.3,.35,1)'; c.style.transform=''; setTimeout(cb,150); });
-  c.addEventListener('pointercancel',()=>{ act=false; c.style.transform=''; });
+  c.addEventListener('pointerup',up);
+  c.addEventListener('pointercancel',()=>{ if(!act) return; act=false; unlock(); c.style.transform=''; });
 }
 function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function mdRender(md){
@@ -853,12 +1023,8 @@ function uninstallMod(){
 function paintCtl(){
   if(!S.status) return;
   const on=S.status.enabled;
-  const hc=$('ctlHero'); hc.classList.toggle('ok',on); hc.classList.toggle('err',!on);
-  $('ctlStatus').textContent=on?T('stateOn'):T('stateOff');
-  $('ctlDaemonNote').textContent='守护进程 '+(on?'运行中':'未运行');
-  $('ctlBadge').innerHTML=on
-    ?'<svg viewBox="0 0 64 64"><path class="ringf" d="M10 32a22 22 0 1 1 44 0" style="color:#34C759"/><path class="tick" d="M22.5 33.5l6.5 6.5L42.5 26.5" style="color:#34C759"/></svg>'
-    :'<svg viewBox="0 0 64 64"><path class="ringf" d="M10 32a22 22 0 1 1 44 0" style="color:#FF453A"/><path class="cross" d="M25.5 25.5l13 13m0-13l-13 13" style="color:#FF453A"/></svg>';
+  $('ctlTitle').textContent = (on ? T('stateOn') : T('stateOff')) + ' · ' + T('ctlTitle');
+  $('ctlSub').textContent = T('ctlSub') + (on ? ' · '+T('daemonUp') : ' · '+T('daemonNotRun'));
   const sw=$('cMasterSw'); if(sw) sw.classList.toggle('on',on);
 }
 
