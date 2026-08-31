@@ -302,6 +302,7 @@ nav{transition:background .35s ease,opacity .3s ease}
 .ctl-btn .lb .d{font-size:12px;color:var(--sub);margin-top:2px}
 .ctl-btn.danger .ic{background:rgba(255,69,58,.12)}
 .ctl-btn.danger .ic svg{stroke:#FF453A}
+.ctl-btn .lb .d.hot{color:var(--ink);font-weight:650}
 .md{font-size:13.5px;line-height:1.75;color:var(--text);word-break:break-word}
 .md h1{font-size:18px;margin:14px 0 8px;font-weight:800}
 .md h2{font-size:16px;margin:12px 0 6px;font-weight:750}
@@ -317,6 +318,35 @@ nav{transition:background .35s ease,opacity .3s ease}
 
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;transition-duration:.15s!important}
+}
+
+/* ---------- 平板 / 桌面自适应（宽屏拆掉手机 430px 限制） ---------- */
+@media (min-width:768px){
+  :root{--gp:18px}
+  .app{max-width:880px}
+  .topbar{max-width:880px}
+  nav{max-width:880px;padding:10px 20px calc(env(safe-area-inset-bottom) + 10px)}
+  .page{padding-left:28px;padding-right:28px}
+  /* 统计卡宽屏 4 列 */
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+  /* 应用列表宽屏双列（桌面三列） */
+  .applist{display:grid;grid-template-columns:1fr 1fr;gap:var(--gp)}
+  #pg-home .applist{margin-bottom:var(--gp)}
+  /* 控制中心按钮双列 */
+  .ctl-list{display:grid;grid-template-columns:1fr 1fr;gap:var(--gp)}
+  .hero{padding:30px 26px;min-height:136px}
+  .hero-status{font-size:36px}
+  .hero-badge{width:88px;height:88px;margin-right:-18px}
+  .hero-badge svg{width:88px;height:88px}
+  /* 日志、进程等阅读型区域加宽舒适度 */
+  .log-box{max-height:60vh}
+}
+@media (min-width:1280px){
+  .app{max-width:1080px}
+  .topbar{max-width:1080px}
+  nav{max-width:1080px}
+  .applist{grid-template-columns:repeat(3,1fr)}
+  .page{padding-left:36px;padding-right:36px}
 }
 </style>
 </head>
@@ -557,6 +587,7 @@ const L = {
     uninstall:"卸载模块", uninstallD:"配置与日志将保留在 /data/adb/bgfreeze",
     ctlNote:"更新公告", ctlNoteEmpty:"点击上方「检查更新」加载最新公告",
     ctlOpen:"开源", ctlLicSrc:"源码与更新源发布后在此显示仓库地址",
+    gitOpen:"GitHub",
     navHome:"主页", navFreeze:"压制", navSettings:"设置", navLog:"日志",
   },
   en: {
@@ -581,6 +612,7 @@ const L = {
     uninstall:"Uninstall module", uninstallD:"Config & logs kept at /data/adb/bgfreeze",
     ctlNote:"Release notes", ctlNoteEmpty:"Tap 'Check updates' above to load notes",
     ctlOpen:"Open source", ctlLicSrc:"Source & update feed will show the repo URL here",
+    gitOpen:"GitHub",
     navHome:"Home", navFreeze:"Freeze", navSettings:"Settings", navLog:"Logs",
   }
 };
@@ -708,7 +740,7 @@ function paint(){
   hc.classList.toggle('ok', on);
   hc.classList.toggle('err', !on);
   $('iHeroBig').textContent = on? T('stateOn') : T('stateOff');
-  $('iHeroMeta').textContent = 'v1.0.0 · Rust · 启动 ' + fmtUptime(s.uptime_secs);
+  $('iHeroMeta').textContent = APP_VER + ' · Rust · 启动 ' + fmtUptime(s.uptime_secs);
   $('iLast').textContent = s.last_cycle_ms;
   if(S.lastHero !== on){
     S.lastHero = on;
@@ -923,8 +955,55 @@ window.addEventListener('load', ()=>{
 });
 
 // ============ 控制中心 & 3D 倾斜 & 更新 ============
-const UPDATE_JSON = 'https://raw.githubusercontent.com/MineACEx/bgfreeze-R/main/update.json';
+const APP_VER='v1.0.0', APP_CODE=100;
+const GH_REPO='MineACEx/bgfreeze-R';
+// 更新源：GitHub 原链 + 国内镜像，按序尝试、超时自动切换
+const UPD_PATHS=[
+  'https://raw.githubusercontent.com/'+GH_REPO+'/main/update.json',
+  'https://cdn.jsdelivr.net/gh/'+GH_REPO+'@main/update.json',
+  'https://ghproxy.net/https://raw.githubusercontent.com/'+GH_REPO+'/main/update.json',
+  'https://gh-proxy.com/https://raw.githubusercontent.com/'+GH_REPO+'/main/update.json',
+  'https://ghfast.top/https://raw.githubusercontent.com/'+GH_REPO+'/main/update.json',
+  'https://ghproxy.cc/https://raw.githubusercontent.com/'+GH_REPO+'/main/update.json'
+];
 let LATEST = null;
+// 依次尝试多个源，任一成功即返回；单个源超时自动切换到下一个
+async function fetchTry(urls, timeout){
+  for(const u of urls){
+    const ctl = typeof AbortController!=='undefined' ? new AbortController() : null;
+    const timer = ctl ? setTimeout(()=>ctl.abort(), timeout) : null;
+    try{
+      const r = await fetch(u, {cache:'no-store', signal: ctl?ctl.signal:undefined});
+      if(!r.ok) throw 0;
+      const j = await r.json();
+      if(j && (j.versionCode!=null || j.zipUrl)) return j;
+    }catch(_){}
+    finally{ if(timer) clearTimeout(timer); }
+  }
+  return null;
+}
+// 由 GitHub 原链生成「国内镜像 → 原链」的下载候选列表
+function dlUrls(zipUrl){
+  const list=[
+    'https://ghproxy.net/'+zipUrl,
+    'https://gh-proxy.com/'+zipUrl,
+    'https://ghfast.top/'+zipUrl,
+    'https://ghproxy.cc/'+zipUrl,
+    zipUrl
+  ];
+  return list.filter(u=>u && /^https?:\/\//.test(u));
+}
+// 更新公告尾部：国内镜像链接 + GitHub 原链链接
+function dlLinksHtml(zipUrl){
+  if(!zipUrl) return '';
+  const a=(l,u)=>'<a href="'+escH(u)+'" target="_blank" rel="noopener">'+l+'</a>';
+  const mirror=dlUrls(zipUrl).filter(u=>u!==zipUrl)[0]||zipUrl;
+  return '<div style="margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:12px;line-height:1.8">'
+    +'<b>下载 · Download</b><br>'
+    +'<span>国内镜像 Mirror</span> '+a('ghproxy.net', mirror)+'<br>'
+    +'<span>GitHub 原链 Original</span> '+a('github.com/'+GH_REPO, zipUrl)
+    +'</div>';
+}
 function tiltBind(c, cb){
   let act=false;
   const lock=()=>{ document.body.classList.add('noscroll'); };
@@ -984,29 +1063,29 @@ function mdRender(md){
 async function checkUpdate(){
   const d=$('cUpdD'); d.textContent='检测中…';
   try{
-    const r=await fetch(UPDATE_JSON,{cache:'no-store'});
-    if(!r.ok) throw 0;
-    const j=await r.json();
+    const j=await fetchTry(UPD_PATHS, 8000);
+    if(!j) throw 0;
     LATEST=j;
-    const cur=100, latest=parseInt(j.versionCode||'0',10)||0;
-    $('cVerInfo').textContent='当前 v1.0.0 → 最新 '+(j.version||latest);
-    $('cNoteMd').innerHTML=mdRender(j.releaseNote||j.changelog||j.note||'');
-    if(latest>cur){ const dl=$('cDowD'); dl.textContent='发现新版本 '+j.version+'，点击下载安装'; dl.style.color='#FF9F0A'; toast('发现新版本 '+j.version); }
-    else { $('cDowD').textContent='已是最新版本'; toast('已是最新版本'); }
+    const latest=parseInt(j.versionCode||'0',10)||0;
+    $('cVerInfo').textContent='当前 '+APP_VER+' → 最新 '+(j.version||latest);
+    $('cNoteMd').innerHTML=mdRender(j.releaseNote||j.changelog||j.note||'') + dlLinksHtml(j.zipUrl);
+    if(latest>APP_CODE){ const dl=$('cDowD'); dl.textContent='发现新版本 '+j.version+'，点击下载安装'; dl.classList.add('hot'); toast('发现新版本 '+j.version); }
+    else { $('cDowD').textContent=(latest===APP_CODE?'已是最新版本':'版本号相同，可点击重新安装'); $('cDowD').classList.remove('hot'); toast('已是最新版本'); }
     d.textContent='再次检查更新';
   }catch(e){
     $('cVerInfo').textContent='';
-    $('cNoteMd').innerHTML=mdRender('> 更新源尚未发布\n\n发布后将在「开源」卡片显示仓库地址。');
-    $('cDowD').textContent='暂无可用更新源';
-    toast('更新源不可用');
+    $('cNoteMd').innerHTML=mdRender('> 更新源不可用\n\n已尝试 GitHub 与多个国内镜像，均无响应。请检查网络后重试，或到 '+T('gitOpen')+' 仓库手动下载。');
+    $('cDowD').textContent='暂无可用更新源'; $('cDowD').classList.remove('hot');
+    toast('更新源不可用，请检查网络');
   }
 }
 async function doUpdate(){
   if(!LATEST||!LATEST.zipUrl){ toast('请先检查更新'); return; }
-  if(!confirm('下载并安装 '+LATEST.version+' ？')) return;
+  if(!confirm('下载并安装 '+LATEST.version+' ？\n将自动尝试国内镜像下载')) return;
   const fn='bgfreeze-R-'+LATEST.version+'.zip';
-  toast('开始下载 '+fn);
-  const r=await api('/api/action',{method:'POST',body:JSON.stringify({action:'update',url:LATEST.zipUrl,file:fn})});
+  toast('开始下载 '+fn+' …');
+  const urls=dlUrls(LATEST.zipUrl);
+  const r=await api('/api/action',{method:'POST',body:JSON.stringify({action:'update',urls:urls,file:fn})});
   if(r&&r.ok){ toast('下载并安装完成，建议重启使新版本生效'); }
   else toast('更新失败，请查看日志');
 }
