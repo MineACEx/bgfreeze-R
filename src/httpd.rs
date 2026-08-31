@@ -103,7 +103,7 @@ fn write_resp(stream: &mut TcpStream, code: u16, ctype: &str, body: &[u8]) -> st
     };
     stream.write_all(
         format!(
-            "HTTP/1.1 {} {}\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: {}; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+            "HTTP/1.1 {} {}\r\nAccess-Control-Allow-Origin: *\r\nCache-Control: no-store\r\nContent-Type: {}; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
             code, reason, ctype, body.len()
         )
         .as_bytes(),
@@ -120,7 +120,7 @@ fn handle(stream: &mut TcpStream, engine: &Arc<Engine>, log: &Arc<Logger>, webro
 
     if req.method == "OPTIONS" {
         stream.write_all(
-            b"HTTP/1.1 204 No Content\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET,POST,OPTIONS\r\nAccess-Control-Allow-Headers: Content-Type\r\nAccess-Control-Max-Age: 86400\r\n\r\n",
+            b"HTTP/1.1 204 No Content\r\nAccess-Control-Allow-Origin: *\r\nCache-Control: no-store\r\nAccess-Control-Allow-Methods: GET,POST,OPTIONS\r\nAccess-Control-Allow-Headers: Content-Type\r\nAccess-Control-Max-Age: 86400\r\n\r\n",
         )?;
         return Ok(());
     }
