@@ -219,27 +219,42 @@ fn handle_api(stream: &mut TcpStream, req: &Req, engine: &Arc<Engine>, log: &Arc
                     let _ = write_resp(stream, 200, "application/json", b"{\"ok\":true}");
                 }
                 "update" => {
-                    let url = v.get("url").and_then(|a| a.as_str()).unwrap_or("");
+                    // urls: 优先抓取前端传入的候选列表（国内镜像在前，GitHub 原链兜底）；依次尝试下载
+                    let mut urls: Vec<String> = v.get("urls")
+                        .and_then(|a| a.as_array())
+                        .map(|arr| arr.iter().filter_map(|u| u.as_str().map(|s| s.to_string())).collect())
+                        .unwrap_or_default();
+                    if urls.is_empty() {
+                        if let Some(u) = v.get("url").and_then(|a| a.as_str()) { urls.push(u.to_string()); }
+                    }
                     let file = v.get("file").and_then(|a| a.as_str()).unwrap_or("bgfreeze-R-update.zip");
-                    if url.is_empty() {
+                    if urls.is_empty() {
                         let _ = write_resp(stream, 400, "application/json", b"{\"ok\":false,\"error\":\"no url\"}");
                         return;
                     }
-                    let cmd = format!(
-                        "f=/sdcard/Download/{}; (command -v curl >/dev/null 2>&1 && curl -ksSL -o \"$f\" '{}') || (command -v wget >/dev/null 2>&1 && wget -q -O \"$f\" '{}'); ls -l \"$f\"; /data/adb/ksud module install \"$f\" 2>&1 | tail -3",
-                        file, url, url
-                    );
-                    let out = std::process::Command::new("sh").arg("-c").arg(&cmd).output();
-                    match out {
-                        Ok(o) => {
-                            let msg = format!("out:{}\nerr:{}", String::from_utf8_lossy(&o.stdout), String::from_utf8_lossy(&o.stderr));
-                            let body = format!("{{\"ok\":true,\"out\":{}}}", serde_json::to_string(&msg).unwrap_or_else(|_| "\"\"".into()));
-                            let _ = write_resp(stream, 200, "application/json", body.as_bytes());
-                        }
-                        Err(_) => {
-                            let _ = write_resp(stream, 500, "application/json", b"{\"ok\":false,\"error\":\"spawn\"}");
+                    // 各 URL 依次尝试（curl 8s 超时；命中不足 1KB 视为失败继续下一个）
+                    let mut last_out = "".to_string();
+                    let mut done = false;
+                    for u in &urls {
+                        let cmd = format!(
+                            "f=/sdcard/Download/{}; (command -v curl >/dev/null 2>&1 && curl -ksSL --connect-timeout 8 --max-time 120 -o \"$f\" '{}') || (command -v wget >/dev/null 2>&1 && wget -q -T 8 -O \"$f\" '{}'); s=$(stat -c%s \"$f\" 2>/dev/null || echo 0); echo \"size=$s url={}\"; if [ \"$s\" -lt 1024 ]; then rm -f \"$f\"; echo FAIL; else echo OK; fi",
+                            file, u, u, u
+                        );
+                        let out = std::process::Command::new("sh").arg("-c").arg(&cmd).output();
+                        match out {
+                            Ok(o) => {
+                                let so = String::from_utf8_lossy(&o.stdout).to_string();
+                                let se = String::from_utf8_lossy(&o.stderr).to_string();
+                                last_out = format!("out:{}\nerr:{}", so, se);
+                                if so.trim().ends_with("OK") { done = true; break; }
+                            }
+                            Err(_) => { last_out = "spawn error".to_string(); }
                         }
                     }
+                    if !done { last_out += "\nall download sources failed"; }
+                    let msg = format!("{} | ok={}", last_out, done);
+                    let body = format!("{{\"ok\":{},\"out\":{}}}", if done { "true" } else { "false" }, serde_json::to_string(&msg).unwrap_or_else(|_| "\"\"".into()));
+                    let _ = write_resp(stream, if done { 200 } else { 500 }, "application/json", body.as_bytes());
                 }
                 "uninstall" => {
                     let st = std::process::Command::new("/data/adb/ksud")
