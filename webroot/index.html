@@ -22,6 +22,12 @@ html[data-theme="light"]{
   --soft:rgba(0,0,0,.045);
   --spot:rgba(0,0,0,.05);
   --ink:#1A1A1E;
+  --thumb:#1C1C20;
+  --thumb-active:rgba(200,200,205,.28);
+  --thumb-glow:rgba(255,255,255,.05);
+  --thumb-line:rgba(0,0,0,.18);
+  --track:rgba(110,110,118,.32);
+  --fill:rgba(28,28,32,.85);
   --navbg:linear-gradient(180deg,rgba(250,250,253,.34),rgba(250,250,253,.10));
   --navbg2:linear-gradient(0deg,rgba(250,250,253,.34),rgba(250,250,253,.10));
 }
@@ -41,6 +47,12 @@ html[data-theme="dark"]{
   --soft:rgba(255,255,255,.09);
   --spot:rgba(255,255,255,.055);
   --ink:#F5F5F7;
+  --thumb:#ECECEF;
+  --thumb-active:rgba(10,10,14,.3);
+  --thumb-glow:rgba(0,0,0,.12);
+  --thumb-line:rgba(255,255,255,.3);
+  --track:rgba(255,255,255,.22);
+  --fill:rgba(245,245,247,.92);
   --navbg:linear-gradient(180deg,rgba(18,18,22,.3),rgba(18,18,22,.08));
   --navbg2:linear-gradient(0deg,rgba(18,18,22,.3),rgba(18,18,22,.08));
 }
@@ -54,16 +66,16 @@ body{
 }
 /* 背景柔光斑点：给毛玻璃提供“背后有东西”的质感 */
 .spot{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;background:var(--spot);
-  transition:background .5s ease}
+  transition:background .5s ease;will-change:transform;transform:translateZ(0)}
 .spot.s1{width:340px;height:340px;top:-120px;right:-100px;opacity:.9}
 .spot.s2{width:300px;height:300px;bottom:-110px;left:-80px;opacity:.7}
 .spot.s3{width:220px;height:220px;top:38%;left:58%;opacity:.5}
 
-.app{position:relative;z-index:1;max-width:430px;margin:0 auto;height:100%;display:flex;flex-direction:column}
+.app{position:relative;z-index:1;width:100%;max-width:min(430px,100%);margin:0 auto;height:100%;display:flex;flex-direction:column;min-width:0}
 
 /* 顶栏 */
 .topbar{
-  position:fixed;top:0;left:0;right:0;max-width:430px;margin:0 auto;
+  position:fixed;top:0;left:0;right:0;width:100%;max-width:min(430px,100vw);margin:0 auto;
   transform:translateZ(0);
   backdrop-filter:blur(8px) saturate(190%);-webkit-backdrop-filter:blur(8px) saturate(190%);
   background:var(--navbg);
@@ -79,7 +91,12 @@ body{
   transition:transform .2s cubic-bezier(.3,1.3,.35,1),background .2s ease
 }
 .brand .logo:active{transform:scale(1.1);background:var(--spot)}
-.brand .logo svg{width:19px;height:19px;stroke:var(--text);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+/* 整个图片与 logo 框同大（SVG 透明背景，可见内容即 LOGO 本身）；
+   深色主题用 invert 反色为纯白，避免 mask 方案的发糊 */
+.brand .logo-img{
+  width:calc(100% - 2px);height:calc(100% - 2px);display:block;object-fit:contain;
+}
+html[data-theme="dark"] .brand .logo-img{filter:invert(1)}
 .brand h1{font-size:17px;font-weight:700;letter-spacing:-.02em}
 .brand .sub{font-size:11px;color:var(--sub);margin-top:1px}
 .pill{
@@ -95,11 +112,11 @@ body{
 
 body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 #heroCard,.card.hero,.alert.card{ touch-action:none; }
-main{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;scrollbar-width:none}
+main{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;scrollbar-width:none;min-width:0}
 main::-webkit-scrollbar{display:none}
 main::-webkit-scrollbar{display:none}
 
-.page{flex:0 0 100%;scroll-snap-align:start;overflow-y:auto;overflow-x:hidden;padding:calc(env(safe-area-inset-top) + 68px) 16px calc(96px + env(safe-area-inset-bottom));mask-image:linear-gradient(180deg,#000 88%,transparent)}
+.page{flex:0 0 100%;min-width:0;scroll-snap-align:start;overflow-y:auto;overflow-x:hidden;padding:calc(env(safe-area-inset-top) + 68px) 16px calc(96px + env(safe-area-inset-bottom));mask-image:linear-gradient(180deg,#000 88%,transparent)}
 
 /* 毛玻璃卡片：更透 + 更糊 */
 .card{
@@ -113,7 +130,6 @@ main::-webkit-scrollbar{display:none}
 #pg-home .card:not(.hero):active{transform:scale(1.012);background:var(--card2)}
 #pg-home .hero.ok:active{background:rgba(52,199,89,.13)}
 #pg-home .hero.err:active{background:rgba(255,69,58,.12)}
-.proc-head:active{background:var(--soft)}
 .sec-title{font-size:13px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin:14px 4px 12px;display:flex;align-items:center;gap:8px}
 .sec-title .ln{width:14px;height:2px;border-radius:2px;background:var(--ink);opacity:.7}
 
@@ -195,29 +211,30 @@ main::-webkit-scrollbar{display:none}
 .seg.mini button:active{transform:scale(1.04)}
 .seg .sepill{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 9px);border-radius:999px;background:var(--badge);backdrop-filter:blur(10px) saturate(180%);-webkit-backdrop-filter:blur(10px) saturate(180%);box-shadow:0 2px 12px rgba(0,0,0,.1);border:1px solid var(--line);z-index:0;transition:left .05s linear,transform .05s linear}
 
-.fpager{display:flex;overflow-x:auto;touch-action:pan-x pan-y;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;margin-bottom:var(--gp)}
+.fpager{display:flex;overflow-x:auto;touch-action:pan-x pan-y;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;margin-bottom:var(--gp);width:100%;min-width:0;max-width:100%}
 .fpager::-webkit-scrollbar{display:none}
-.fpane{flex:0 0 100%;scroll-snap-align:start}
+.fpane{flex:0 0 100%;min-width:0;width:100%;scroll-snap-align:start}
+.fpane>*{min-width:0;width:100%;max-width:100%}
 .seg.mini{display:inline-flex;width:auto;padding:2px;gap:2px;margin:0}
 .seg.mini button{font-size:11px;font-weight:650;padding:5px 10px}
 .seg button.on{color:var(--text)}
 
-.proc-block{margin-bottom:var(--gp)}
-.proc-head{display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer}
-.proc-head .chev{transition:transform .3s cubic-bezier(.32,.72,0,1);color:var(--sub)}
+.proc-block{margin-bottom:var(--gp);min-width:0;width:100%;max-width:100%}
+.proc-head{display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer;min-width:0}
+.proc-head .chev{transition:transform .3s cubic-bezier(.32,.72,0,1);color:var(--sub);flex:none}
 .proc-head.open .chev{transform:rotate(180deg)}
-.proc-body{height:0;overflow:hidden;padding:0 14px;transition:height .4s cubic-bezier(.3,1.3,.35,1),padding .3s ease}
+.proc-body{height:0;overflow:hidden;padding:0 14px;transition:height .4s cubic-bezier(.3,1.3,.35,1),padding .3s ease;min-width:0;max-width:100%}
 .proc-head.open .chev{transform:rotate(180deg)}
-.prow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line2);font-size:13px}
-.prow .pinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.prow .pname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:550}
-.prow .ppid{color:var(--sub);font-size:11px;font-variant-numeric:tabular-nums}
+.prow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line2);font-size:13px;min-width:0;width:100%;max-width:100%}
+.prow .pinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.prow .pname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:550;max-width:100%}
+.prow .ppid{color:var(--sub);font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .prow .prss{width:auto;flex:none;text-align:right}
-.badge{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.02em}
+.badge{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.02em;flex:none}
 .badge.frozen{background:var(--soft);color:var(--text);border:1px solid var(--line2)}
 .badge.running{color:var(--sub);background:transparent;border:none;font-weight:600}
 .badge.preserved{border:1px solid var(--line2);color:var(--sub);background:transparent}
-.prow .prss{color:var(--sub);font-size:11px;font-variant-numeric:tabular-nums;width:46px;text-align:right}
+.prow .prss{color:var(--sub);font-size:11px;font-variant-numeric:tabular-nums;width:auto;text-align:right;flex:none}
 
 /* 按钮：毛玻璃悬浮，不再大黑块 */
 .btn{
@@ -240,8 +257,60 @@ main::-webkit-scrollbar{display:none}
 .set-item .lbl{flex:1}
 .set-item .lbl .t{font-size:14.5px;font-weight:620}
 .set-item .lbl .d{font-size:12px;color:var(--sub);margin-top:2px}
-.slider{flex:1;height:30px;accent-color:var(--ink);min-width:90px}
-.slider-val{font-size:13px;font-weight:700;width:34px;text-align:center;font-variant-numeric:tabular-nums;color:var(--sub)}
+/* 自定义滑块：普通 div 组件（伪元素不支持 backdrop-filter，故用真实元素）
+   轨道+knob 绘制，透明 range 覆盖接收触摸 */
+.slider-box{position:relative;flex:1;min-width:90px;height:32px;display:flex;align-items:center;touch-action:none}
+.slider-track{position:absolute;left:2px;right:2px;top:50%;margin-top:-2.5px;height:5px;border-radius:999px;background:var(--track)}
+/* 已激活段（knob 左侧）：高亮进度 */
+.slider-fill{position:absolute;left:2px;top:50%;margin-top:-2.5px;width:0;height:5px;border-radius:999px;background:var(--fill, rgba(120,120,128,.7));z-index:1}
+.slider-knob{
+  position:absolute;top:50%;left:-100px;width:12px;height:12px;margin-left:-6px;margin-top:-6px;border-radius:50%;
+  background:var(--thumb);border:1px solid var(--thumb-line);
+  box-shadow:0 1px 3px rgba(0,0,0,.22);
+  transition:width .18s cubic-bezier(.3,1.3,.35,1),height .18s cubic-bezier(.3,1.3,.35,1),
+              margin .18s cubic-bezier(.3,1.3,.35,1),background .25s ease,box-shadow .25s ease;
+  pointer-events:none;z-index:2;
+}
+/* 长按时本体：仅轻微放大作为"触点提示"；毛玻璃视觉由 body 级 #knobGlass 独立层承担 */
+.slider-knob.active{
+  width:22px;height:22px;margin-left:-11px;margin-top:-11px;
+  transform:translateZ(0);
+  background:var(--navbg);
+  border:1px solid var(--line);
+  box-shadow:0 2px 10px rgba(0,0,0,.14);
+}
+.slider-box .slider{
+  position:absolute;inset:0;width:100%;height:100%;margin:0;
+  -webkit-appearance:none;appearance:none;background:transparent;outline:none;cursor:pointer;opacity:0;
+}
+/* 滑块长按毛玻璃独立层：位于 body 最外层（无 backdrop-filter 嵌套祖先），
+   降低模糊度（blur 4px）让形变更明显、更通透 */
+#knobGlass{
+  position:fixed;left:0;top:0;width:24px;height:24px;border-radius:50%;
+  margin-left:-12px;margin-top:-12px;pointer-events:none;z-index:999;
+  background:var(--navbg);
+  border:1px solid var(--line);
+  transform:translateZ(0);
+  backdrop-filter:blur(3px) saturate(190%);-webkit-backdrop-filter:blur(3px) saturate(190%);
+  box-shadow:inset 0 0 5px rgba(255,255,255,.18),0 2px 10px rgba(0,0,0,.14);
+  opacity:0;
+  transition:opacity .16s ease,left .02s linear,top .02s linear;
+}
+#knobGlass.show{opacity:1}
+/* G2 连续曲率圆角（超椭圆 squircle）：
+   corner-shape:squircle 为 Chrome 139+ / 现代 WebView 原生 G2 支持，
+   与 border-radius 并存（border-radius=尺寸、corner-shape=曲率形状），
+   尺寸由 --r 变量无极驱动（radChange 滑杆实时可调）；
+   不支持 corner-shape 的内核自动回退为普通 border-radius（G1）。 */
+.card,.stat,.log-box,.ctl-btn,.btn,.hero,.app-ic,.iconbtn,.brand .logo,.proc-block,.app-row{
+  corner-shape:squircle;
+  -webkit-corner-shape:squircle;
+}
+
+/* 无自定义轨道的兜底（兼容）：默认 background 也不显示原生控件 */
+.slider-box .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:1px;height:1px;opacity:0}
+.slider-box .slider::-moz-range-thumb{width:1px;height:1px;opacity:0}
+.slider-val{font-size:13px;font-weight:700;width:44px;text-align:center;font-variant-numeric:tabular-nums;color:var(--sub);flex:none}
 
 .log-box{
   background:var(--card2);border:1px solid var(--line);border-radius:calc(var(--r) - 10px);padding:14px;
@@ -256,7 +325,7 @@ main::-webkit-scrollbar{display:none}
 .log-empty{color:var(--sub);text-align:center;padding:30px 0}
 
 nav{
-  position:fixed;left:50%;transform:translateX(-50%);bottom:0;z-index:20;width:100%;max-width:430px;
+  position:fixed;left:50%;transform:translateX(-50%);bottom:0;z-index:20;width:100%;max-width:min(430px,100vw);
   backdrop-filter:blur(8px) saturate(190%);-webkit-backdrop-filter:blur(8px) saturate(190%);will-change:backdrop-filter;
   background:var(--navbg);border-top:1px solid var(--line);
   display:flex;padding:8px 12px calc(env(safe-area-inset-bottom) + 8px);transition:background .35s ease}
@@ -356,7 +425,7 @@ nav{transition:background .35s ease,opacity .3s ease}
 <div class="app">
   <header class="topbar">
     <div class="brand">
-      <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 3l7 4v7l-7 4-7-4V7z"/><circle cx="12" cy="11" r="2.4"/></svg></div>
+      <div class="logo"><img class="logo-img" src="tab-logo.svg" alt="BGFreeze"></div>
       <div>
         <h1>BGFreeze</h1>
       </div>
@@ -413,33 +482,43 @@ nav{transition:background .35s ease,opacity .3s ease}
       <div id="fv-cfg">
         <div class="card">
           <div class="set-item">
-            <div class="lbl"><div class="t" id="sGraceT">解冻宽限</div><div class="d" id="sGraceD">切后台后保留不冻结，短时间返回秒开；超时后开始冻结省内存</div></div>
-            <input type="range" class="slider" id="slGrace" min="0" max="300" step="30" value="120" oninput="graceChange(this)">
+            <div class="lbl"><div class="t" id="sGraceT" data-i18n="graceT">解冻宽限</div><div class="d" id="sGraceD" data-i18n="graceD">切后台后保留不冻结，短时间返回秒开；超时后开始冻结省内存</div></div>
+            <div class="slider-box" id="slGraceBox">
+            <span class="slider-track"></span>
+            <span class="slider-fill"></span>
+            <span class="slider-knob"></span>
+            <input type="range" class="slider" id="slGrace" min="0" max="300" step="1" value="120" oninput="graceChange(this)">
+            </div>
             <div class="slider-val" id="graceVal">120s</div>
           </div>
         </div>
         <div class="card">
           <div class="set-item">
-            <div class="lbl"><div class="t" id="sCfgIntT">循环间隔</div><div class="d" id="sCfgIntD">每隔一段时间检测一次后台进程</div></div>
-            <input type="range" class="slider" id="slInterval" min="5" max="60" step="5" value="10" oninput="ivalChange(this)">
+            <div class="lbl"><div class="t" id="sCfgIntT" data-i18n="intervalT">循环间隔</div><div class="d" id="sCfgIntD" data-i18n="intervalD">每隔一段时间检测一次后台进程</div></div>
+            <div class="slider-box" id="slIntervalBox">
+            <span class="slider-track"></span>
+            <span class="slider-fill"></span>
+            <span class="slider-knob"></span>
+            <input type="range" class="slider" id="slInterval" min="5" max="60" step="1" value="10" oninput="ivalChange(this)">
+            </div>
             <div class="slider-val" id="ivalVal">10s</div>
           </div>
         </div>
         <div class="card">
           <div class="set-item">
-            <div class="lbl"><div class="t" id="sM0T">SIGSTOP 硬冻结</div><div class="d" id="sM0D">真正挂起进程，CPU 立即归零</div></div>
+            <div class="lbl"><div class="t" id="sM0T" data-i18n="m0T">SIGSTOP 硬冻结</div><div class="d" id="sM0D" data-i18n="m0D">真正挂起进程，CPU 立即归零</div></div>
             <div class="switch on" id="swSigstop" onclick="toggleFlag('use_sigstop',this)"></div>
           </div>
           <div class="set-item">
-            <div class="lbl"><div class="t" id="sM1T">CPUSET 限核</div><div class="d" id="sM1D">锁定到受限核组，降低后台干扰</div></div>
+            <div class="lbl"><div class="t" id="sM1T" data-i18n="m1T">CPUSET 限核</div><div class="d" id="sM1D" data-i18n="m1D">锁定到受限核组，降低后台干扰</div></div>
             <div class="switch on" id="swCpuset" onclick="toggleFlag('use_cpuset',this)"></div>
           </div>
           <div class="set-item">
-            <div class="lbl"><div class="t" id="sM2T">Renice 降权</div><div class="d" id="sM2D">进程优先级降至 19（最低）</div></div>
+            <div class="lbl"><div class="t" id="sM2T" data-i18n="m2T">Renice 降权</div><div class="d" id="sM2D" data-i18n="m2D">进程优先级降至 19（最低）</div></div>
             <div class="switch on" id="swRenice" onclick="toggleFlag('use_renice',this)"></div>
           </div>
         </div>
-        <div class="sec-title"><span class="ln"></span><span id="sCfgAppsT">应用策略</span></div>
+        <div class="sec-title"><span class="ln"></span><span id="sCfgAppsT" data-i18n="appCfg">应用策略</span></div>
         <div id="cfgApps"></div>
       </div>
       </div>
@@ -456,7 +535,12 @@ nav{transition:background .35s ease,opacity .3s ease}
         </div>
         <div class="sec-title" style="margin-top:20px"><span class="ln"></span><span id="sRadT" data-i18n="radius">圆角</span></div>
         <div class="set-item" style="border:none">
-          <input type="range" class="slider" id="slRadius" min="16" max="40" step="4" value="28" oninput="radChange(this)">
+          <div class="slider-box" id="slRadiusBox">
+          <span class="slider-track"></span>
+          <span class="slider-fill"></span>
+          <span class="slider-knob"></span>
+          <input type="range" class="slider" id="slRadius" min="16" max="40" step="1" value="28" oninput="radChange(this)">
+          </div>
           <div class="slider-val" id="radVal">28</div>
         </div>
       </div>
@@ -485,8 +569,8 @@ nav{transition:background .35s ease,opacity .3s ease}
     <section class="page" id="pg-log">
       <div class="sec-title"><span class="ln"></span><span id="iLogTt" data-i18n="logT">运行日志</span>
         <span style="margin-left:auto;display:flex;gap:8px">
-          <button class="iconbtn" onclick="copyLogs()" title="copy"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9zM15 4H5v11"/></svg></button>
-          <button class="iconbtn" onclick="loadLogs()" title="refresh"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
+          <button class="iconbtn" onclick="copyLogs()" data-i18n-title="copyLogs" title="copy"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9zM15 4H5v11"/></svg></button>
+          <button class="iconbtn" onclick="loadLogs()" data-i18n-title="refreshLogs" title="refresh"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
         </span>
       </div>
       <div class="log-box" id="logBox"><div class="log-empty" id="iLogEmpty" data-i18n="logEmpty">暂无日志</div></div>
@@ -496,7 +580,7 @@ nav{transition:background .35s ease,opacity .3s ease}
     <section class="page" id="pg-control">
       <div class="pg-title" id="ctlTitleBox">
         <div style="display:flex;align-items:center;gap:12px">
-          <button class="iconbtn" onclick="goto('home')" title="返回主页" style="width:38px;height:38px"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button class="iconbtn" onclick="goto('home')" data-i18n-title="backHome" title="返回主页" style="width:38px;height:38px"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
           <div class="pg-title-big" id="ctlTitle" data-i18n="ctlTitle">模块控制</div>
         </div>
         <div class="pg-title-sub" id="ctlSub" data-i18n="ctlSub">开关 / 更新 / 卸载</div>
@@ -559,6 +643,9 @@ nav{transition:background .35s ease,opacity .3s ease}
   </button>
 </nav>
 
+<!-- 滑块长按毛玻璃：body 直接子级（无 backdrop 嵌套祖先），由 JS 定位跟随 knob -->
+<div id="knobGlass" aria-hidden="true"></div>
+
 <div id="toast"></div>
 
 <script>
@@ -578,6 +665,19 @@ const L = {
     fg:"前台", bg:"后台", frozen:"冻结", running:"运行", preserved:"保留",
     keepT:"保留推送进程", keepD:"以 : 开头精确匹配后台推送进程", fzMainT:"冻结主进程", fzMainD:"关闭则主进程保留运行",
     lastCycle:"上次循环", statFrozen:"冻结进程", statMem:"冻结内存", shortFreeze:"冻结全部", shortUnf:"解冻全部",
+    noProcs:"暂无后台进程（运行后自动检测）",
+    upSince:"启动", upOff:"未运行",
+    powerT:"冻结力度", powerD:"轻=仅降权 · 标准=降权+限核 · 激进=含SIGSTOP", powerL:"轻", powerM:"标准", powerH:"激进",
+    uClose:"0 (关)",
+    dlTip:"下载 · Download", dlMirror:"国内镜像 Mirror", dlOrigin:"GitHub 原链 Original",
+    chkIng:"检测中…", chkAgain:"再次检查更新", chkCur:"当前", chkTo:"→ 最新",
+    newVer:"发现新版本", isLatest:"已是最新版本", sameVer:"版本号相同，可点击重新安装",
+    srcDown:"暂无可用更新源", srcUnavail:"更新源不可用，请检查网络",
+    upSrcNote:"更新源不可用", upSrcDone:"下载并安装完成，建议重启使新版本生效", upSrcFail:"更新失败，请查看日志",
+    plsCheck:"请先检查更新", dlBegin:"开始下载", dlQ:"下载并安装", dlQ2:"将自动尝试国内镜像下载",
+    cfmReboot:"确认重启系统？", rebooting:"正在重启…",
+    cfmUninstall:"确认卸载 BGFreeze-R？配置将保留", uninstalling:"正在卸载…",
+    backHome:"返回主页", copyLogs:"复制日志", refreshLogs:"刷新日志", offline:"离线",
     themeLight:"☀ 浅色", themeAuto:"系统", themeDark:"☾ 深色",
     aboutD:"Rust 内核 · 极低占用 · 黑白设计", aboutD2:"守护进程监听 127.0.0.1:8765",
     ctlTitle:"模块控制", ctlSub:"开关 / 更新 / 卸载", daemonUp:"守护进程运行中", daemonNotRun:"守护进程未运行",
@@ -603,6 +703,19 @@ const L = {
     fg:"Foreground", bg:"Background", frozen:"Frozen", running:"Running", preserved:"Keep",
     keepT:"Keep push processes", keepD:"Suffix starting with : matches push daemons", fzMainT:"Freeze main process", fzMainD:"Off keeps main process running",
     lastCycle:"Last cycle", statFrozen:"Frozen processes", statMem:"Frozen memory", shortFreeze:"Freeze all", shortUnf:"Unfreeze all",
+    noProcs:"No background processes yet (auto-detected while running)",
+    upSince:"up", upOff:"off",
+    powerT:"Freeze strength", powerD:"Light=renice · Standard=renice+cpuset · Aggressive=+SIGSTOP", powerL:"Light", powerM:"Standard", powerH:"Aggressive",
+    uClose:"0 (off)",
+    dlTip:"Download", dlMirror:"Mirror", dlOrigin:"GitHub Original",
+    chkIng:"Checking…", chkAgain:"Check again", chkCur:"Current", chkTo:"→ latest",
+    newVer:"New version found", isLatest:"Already up to date", sameVer:"Same version, tap to reinstall",
+    srcDown:"No update source available", srcUnavail:"Update source unreachable, check network",
+    upSrcNote:"Update source unavailable", upSrcDone:"Download & install done, reboot to apply", upSrcFail:"Update failed, check logs",
+    plsCheck:"Check for updates first", dlBegin:"Downloading", dlQ:"Download & install", dlQ2:"China mirrors will be tried automatically",
+    cfmReboot:"Reboot system now?", rebooting:"Rebooting…",
+    cfmUninstall:"Uninstall BGFreeze-R? Config will be kept", uninstalling:"Uninstalling…",
+    backHome:"Back to Home", copyLogs:"Copy logs", refreshLogs:"Refresh logs", offline:"offline",
     themeLight:"☀ Light", themeAuto:"System", themeDark:"☾ Dark",
     aboutD:"Rust core · Minimal footprint · Monochrome", aboutD2:"Daemon listens on 127.0.0.1:8765",
     ctlTitle:"Module Control", ctlSub:"Switch / Update / Uninstall", daemonUp:"daemon running", daemonNotRun:"daemon not running",
@@ -619,6 +732,7 @@ const L = {
 function T(k){ return (L[S.lang]||L.zh)[k] || k; }
 function applyI18n(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; const v=T(k); if(v!==k) el.textContent = v; });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ const k=el.dataset.i18nTitle; const v=T(k); if(v!==k) el.title = v; });
 }
 
 const APP_ICON_PNG = {
@@ -711,6 +825,7 @@ function setTheme(t, el){
 function radChange(el){
   const v = el.value;
   $('radVal').textContent = v;
+  syncKnob(el);
   document.documentElement.style.setProperty('--r', v+'px');
   localStorage.setItem('bf_radius', v);
 }
@@ -718,6 +833,7 @@ function applyPrefs(){
   const r = localStorage.getItem('bf_radius');
   if(r){ document.documentElement.style.setProperty('--r', r+'px'); if($('slRadius')) $('slRadius').value = r; if($('radVal')) $('radVal').textContent = r; }
   applyTheme();
+  initKnobs();
 }
 
 function setLang(l, el){
@@ -725,6 +841,8 @@ function setLang(l, el){
   document.body.classList.add('swap');
   setTimeout(()=>{
     S.lang = l; localStorage.setItem('bf_lang', l);
+    // 重置动态渲染缓存，确保应用策略里的文案（力度/保留等）随语言重绘
+    homeKey=''; procKey=''; cfgKey='';
     document.querySelectorAll('#segLang button').forEach(b=>b.classList.toggle('on', b===el));
     paint(); applyI18n(); document.body.classList.remove('swap');
   }, 140);
@@ -740,7 +858,7 @@ function paint(){
   hc.classList.toggle('ok', on);
   hc.classList.toggle('err', !on);
   $('iHeroBig').textContent = on? T('stateOn') : T('stateOff');
-  $('iHeroMeta').textContent = APP_VER + ' · Rust · 启动 ' + fmtUptime(s.uptime_secs);
+  $('iHeroMeta').textContent = APP_VER + ' · Rust · ' + T('upSince') + ' ' + fmtUptime(s.uptime_secs);
   $('iLast').textContent = s.last_cycle_ms;
   if(S.lastHero !== on){
     S.lastHero = on;
@@ -751,6 +869,7 @@ function paint(){
   $('iFrozen').textContent = s.frozen_count;
   $('iMem').textContent = fmtMem(s.frozen_kb);
   paintHomeApps();
+  // 压制页三个函数均带 key 缓存，无变化时直接短路，性能无负担
   paintProcs();
   paintCfg();
   paintCtl();
@@ -796,7 +915,7 @@ function paintProcs(){
   $('procList').innerHTML = apps.map(a=>{
     const fz = a.processes.filter(p=>p.state==='frozen').length;
     if(!a.processes || !a.processes.length){
-      const rows = '<div class="prow"><div class="pinfo"><span class="pname" style="color:var(--sub)">暂无后台进程（运行后自动检测）</span></div><span class="badge running">-</span></div>';
+      const rows = '<div class="prow"><div class="pinfo"><span class="pname" style="color:var(--sub)">'+T('noProcs')+'</span></div><span class="badge running">-</span></div>';
       return '<div class="card proc-block"><div class="proc-head" onclick="toggleProc(this)">'
         +'<div class="app-ic" style="width:36px;height:36px;border-radius:11px">'+appIcon(a.package)+'</div>'
         +'<div class="app-mid"><div class="name">'+esc(a.label||a.package)+'</div><div class="meta">0 procs</div></div>'
@@ -816,15 +935,20 @@ function paintProcs(){
       +'</div><div class="proc-body">'+rows+'</div></div>';
   }).join('') || '<div class="card">—</div>';
 }
+let cfgKey='';
 function paintCfg(){
   if(!S.config) return;
   const c = S.config;
   if($('swMasterCfg')) $('swMasterCfg').classList.toggle('on', c.enabled);
-  if($('slGrace')){ $('slGrace').value = c.grace_secs; graceChange($('slGrace')); }
-  $('slInterval').value = c.interval_secs; ivalChange($('slInterval'));
+  if($('slGrace')){ if($('slGrace').value != c.grace_secs){ $('slGrace').value = c.grace_secs; syncKnob($('slGrace')); } $('graceVal').textContent = (c.grace_secs==0 ? T('uClose') : c.grace_secs+'s'); }
+  if($('slInterval')){ if($('slInterval').value != c.interval_secs){ $('slInterval').value = c.interval_secs; syncKnob($('slInterval')); } $('ivalVal').textContent = c.interval_secs+'s'; }
   $('swSigstop').classList.toggle('on', c.use_sigstop);
   $('swCpuset').classList.toggle('on', c.use_cpuset);
   $('swRenice').classList.toggle('on', c.use_renice);
+  // 应用策略区：内容无变化则不重建 DOM（降卡顿）
+  const nk = JSON.stringify(c.apps.map(a=>[a.package,a.enabled,a.freeze_main,a.power,a.keep]));
+  if(nk===cfgKey) return;
+  cfgKey=nk;
   $('cfgApps').innerHTML = c.apps.map((a,i)=>{
     const keepChips = a.keep.map(k=>'<span class="chip" style="padding:4px 8px;font-size:11px">'+esc(k)+' <b style="cursor:pointer" onclick="rmKeep('+i+',\''+k.replace(/'/g,"\\'")+'\')">✕</b></span>').join('');
     return '<div class="card">'
@@ -833,8 +957,8 @@ function paintCfg(){
       +'<div class="switch '+(a.enabled?'on':'')+'" onclick="toggleAppEnabled('+i+',this)"></div></div>'
       +'<div class="set-item"><div class="lbl"><div class="t">'+T('fzMainT')+'</div><div class="d">'+T('fzMainD')+'</div></div>'
       +'<div class="switch '+(a.freeze_main?'on':'')+'" onclick="toggleAppMain('+i+',this)"></div></div>'
-+'<div class="set-item"><div class="lbl"><div class="t">冻结力度</div><div class="d">轻=仅降权 · 标准=降权+限核 · 激进=含SIGSTOP</div></div>'
-+'<div class="seg mini">'+[0,1,2].map(function(v){return '<button class="'+(a.power===v?'on':'')+'" onclick="setPower('+i+','+v+')">'+['轻','标准','激进'][v]+'</button>'}).join('')+'</div>'
++'<div class="set-item"><div class="lbl"><div class="t">'+T('powerT')+'</div><div class="d">'+T('powerD')+'</div></div>'
++'<div class="seg mini">'+[0,1,2].map(function(v){return '<button class="'+(a.power===v?'on':'')+'" onclick="setPower('+i+','+v+')">'+[T('powerL'),T('powerM'),T('powerH')][v]+'</button>'}).join('')+'</div>'
 +'</div>'
       +'<div class="set-item" style="border:none"><div class="lbl"><div class="t">'+T('keepT')+'</div><div class="d">'+T('keepD')+'</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">'+keepChips+'<input id="keepIn'+i+'" type="text" placeholder=":push" style="flex:1;min-width:80px;background:var(--card2);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:6px 10px;font-size:12px;outline:none">'
@@ -842,11 +966,77 @@ function paintCfg(){
       +'</div>';
   }).join('') || '<div class="card">—</div>';
 }
-function graceChange(el){
-  $('graceVal').textContent = (el.value==0 ? '0 (关)' : el.value+'s');
-  if(S.config && S.config.grace_secs!=el.value*1){ const c=JSON.parse(JSON.stringify(S.config)); c.grace_secs=el.value*1; saveCfg(c, true); }
+let _graceT=null,_ivalT=null;
+/* 自定义滑块：knob 位置同步 + 指针直接拖动（无级、丝滑） */
+function syncKnob(inp){
+  const box = inp.closest('.slider-box'); if(!box) return;
+  const knob = box.querySelector('.slider-knob'); if(!knob) return;
+  const mn = parseFloat(inp.min||0), mx = parseFloat(inp.max||100);
+  const v = parseFloat(inp.value||0);
+  const ratio = mx>mn ? Math.max(0, Math.min(1, (v-mn)/(mx-mn))) : 0;
+  const track = box.querySelector('.slider-track');
+  const w = (track? track.clientWidth : box.clientWidth - 4) || (box.clientWidth-4);
+  knob.style.left = (2 + ratio*w) + 'px';
+  // 已激活段（knob 左侧高亮进度）
+  const fill = box.querySelector('.slider-fill');
+  if(fill) fill.style.width = (ratio*w) + 'px';
 }
-function ivalChange(el){ $('ivalVal').textContent = el.value+'s'; }
+function bindKnob(inp){
+  if(!inp || inp.dataset.knob) return; inp.dataset.knob='1';
+  const box = inp.closest('.slider-box'); if(!box) return;
+  const knob = box.querySelector('.slider-knob');
+  const glass = document.getElementById('knobGlass');
+  let dragging=false;
+  // 长按毛玻璃：用 body 级固定定位元素跟随 knob（localToView 换算视口坐标）
+  const moveGlass=()=>{
+    if(!glass||!knob) return;
+    const r = knob.getBoundingClientRect();
+    glass.style.left = (r.left + r.width/2) + 'px';
+    glass.style.top  = (r.top + r.height/2) + 'px';
+  };
+  const setAct=(on)=>{
+    if(knob) knob.classList.toggle('active',!!on);
+    if(glass){ if(on){ moveGlass(); glass.classList.add('show'); } else { glass.classList.remove('show'); } }
+  };
+  // 指针按像素位置直接换算 value（无级连续；由 oninput=xxxChange 负责保存）
+  const move=(e)=>{
+    const r = inp.getBoundingClientRect();
+    if(r.width<=0) return;
+    let ratio=(e.clientX-r.left)/r.width;
+    ratio=Math.max(0,Math.min(1,ratio));
+    const mn=parseFloat(inp.min||0), mx=parseFloat(inp.max||100);
+    const val=Math.round(mn+ratio*(mx-mn));
+    if(inp.value!=val){ inp.value=val; inp.dispatchEvent(new Event('input',{bubbles:true})); }
+    moveGlass();
+  };
+  inp.addEventListener('pointerdown',e=>{ dragging=true; setAct(true); try{inp.setPointerCapture(e.pointerId);}catch(_){} move(e); });
+  inp.addEventListener('pointermove',e=>{ if(dragging) move(e); });
+  inp.addEventListener('pointerup',()=>{ dragging=false; setAct(false); });
+  inp.addEventListener('pointercancel',()=>{ dragging=false; setAct(false); });
+  inp.addEventListener('input',()=>{ syncKnob(inp); moveGlass(); });
+  syncKnob(inp);
+}
+function initKnobs(){
+  document.querySelectorAll('.slider-box .slider').forEach(bindKnob);
+}
+function graceChange(el){
+  $('graceVal').textContent = (el.value==0 ? T('uClose') : el.value+'s');
+  syncKnob(el);
+  if(!S.config || S.config.grace_secs==el.value*1) return;
+  clearTimeout(_graceT);
+  _graceT = setTimeout(()=>{
+    const c = JSON.parse(JSON.stringify(S.config)); c.grace_secs = el.value*1; saveCfg(c, true);
+  }, 200);
+}
+function ivalChange(el){
+  $('ivalVal').textContent = el.value+'s';
+  syncKnob(el);
+  if(!S.config || S.config.interval_secs==el.value*1) return;
+  clearTimeout(_ivalT);
+  _ivalT = setTimeout(()=>{
+    const c = JSON.parse(JSON.stringify(S.config)); c.interval_secs = el.value*1; saveCfg(c, true);
+  }, 200);
+}
 
 function toggleFlag(key, el){
   el.classList.toggle('on');
@@ -931,18 +1121,16 @@ function paintOffline(){
   const hc = $('heroCard');
   hc.classList.remove('ok'); hc.classList.add('err');
   $('iHeroBig').textContent = T('stateOff');
-  $('iHeroMeta').textContent = 'daemon offline';
+  $('iHeroMeta').textContent = 'daemon ' + T('offline');
   $('iLast').textContent = '--';
   $('heroBadge').innerHTML = '<svg viewBox="0 0 64 64"><path class="ringf" d="M10 32a22 22 0 1 1 44 0" style="color:#FF453A"/><path class="cross" d="M25.5 25.5l13 13m0-13l-13 13" style="color:#FF453A"/></svg>';
 }
 async function refresh(){
-  const st = await api('/api/status');
+  // 首载并行拉取状态与配置，减少串行等待
+  const [st, cfg] = await Promise.all([api('/api/status'), (S.config?null:api('/api/config'))]);
   if(st){ S.status = st; paint(); S.dl = true; }
   else { S.status = null; paintOffline(); }
-  if(!S.config){
-    const c = await api('/api/config');
-    if(c){ S.config = c; paintCfg(); }
-  }
+  if(cfg){ S.config = cfg; paintCfg(); }
 }
 window.addEventListener('load', ()=>{
   tiltBind($('heroCard'), ()=>{ goto('control'); paintCtl(); });
@@ -999,15 +1187,16 @@ function dlLinksHtml(zipUrl){
   const a=(l,u)=>'<a href="'+escH(u)+'" target="_blank" rel="noopener">'+l+'</a>';
   const mirror=dlUrls(zipUrl).filter(u=>u!==zipUrl)[0]||zipUrl;
   return '<div style="margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:12px;line-height:1.8">'
-    +'<b>下载 · Download</b><br>'
-    +'<span>国内镜像 Mirror</span> '+a('ghproxy.net', mirror)+'<br>'
-    +'<span>GitHub 原链 Original</span> '+a('github.com/'+GH_REPO, zipUrl)
+    +'<b>'+T('dlTip')+'</b><br>'
+    +'<span>'+T('dlMirror')+'</span> '+a('ghproxy.net', mirror)+'<br>'
+    +'<span>'+T('dlOrigin')+'</span> '+a('github.com/'+GH_REPO, zipUrl)
     +'</div>';
 }
 function tiltBind(c, cb){
   let act=false;
   const lock=()=>{ document.body.classList.add('noscroll'); };
   const unlock=()=>{ document.body.classList.remove('noscroll'); };
+  // 工作中卡片：仅倾斜不放大（保留 3D 倾斜效果，去掉 scale 放大）
   const go=(e)=>{
     const r=c.getBoundingClientRect();
     const dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
@@ -1015,7 +1204,7 @@ function tiltBind(c, cb){
     const ry=Math.max(-m,Math.min(m, dx/(r.width/2)*m));
     const rx=-Math.max(-m,Math.min(m, dy/(r.height/2)*m));
     c.style.transition='transform .04s linear';
-    c.style.transform='perspective(700px) rotateX('+rx.toFixed(1)+'deg) rotateY('+ry.toFixed(1)+'deg) scale(1.04)';
+    c.style.transform='perspective(700px) rotateX('+rx.toFixed(1)+'deg) rotateY('+ry.toFixed(1)+'deg)';
   };
   const up=()=>{
     if(!act) return;
@@ -1030,7 +1219,7 @@ function tiltBind(c, cb){
     const dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
     const ry=(dx<0?-1:1)*6, rx=(dy<0?1:-1)*6;
     c.style.transition='transform .18s cubic-bezier(.3,1.3,.35,1)';
-    c.style.transform='perspective(700px) rotateX('+rx+'deg) rotateY('+ry+'deg) scale(1.04)';
+    c.style.transform='perspective(700px) rotateX('+rx+'deg) rotateY('+ry+'deg)';
     try{c.setPointerCapture(e.pointerId);}catch(_){}
   });
   c.addEventListener('pointermove',e=>{ if(act) go(e); });
@@ -1061,43 +1250,43 @@ function mdRender(md){
   return out;
 }
 async function checkUpdate(){
-  const d=$('cUpdD'); d.textContent='检测中…';
+  const d=$('cUpdD'); d.textContent=T('chkIng');
   try{
     const j=await fetchTry(UPD_PATHS, 8000);
     if(!j) throw 0;
     LATEST=j;
     const latest=parseInt(j.versionCode||'0',10)||0;
-    $('cVerInfo').textContent='当前 '+APP_VER+' → 最新 '+(j.version||latest);
+    $('cVerInfo').textContent=T('chkCur')+' '+APP_VER+' '+T('chkTo')+' '+(j.version||latest);
     $('cNoteMd').innerHTML=mdRender(j.releaseNote||j.changelog||j.note||'') + dlLinksHtml(j.zipUrl);
-    if(latest>APP_CODE){ const dl=$('cDowD'); dl.textContent='发现新版本 '+j.version+'，点击下载安装'; dl.classList.add('hot'); toast('发现新版本 '+j.version); }
-    else { $('cDowD').textContent=(latest===APP_CODE?'已是最新版本':'版本号相同，可点击重新安装'); $('cDowD').classList.remove('hot'); toast('已是最新版本'); }
-    d.textContent='再次检查更新';
+    if(latest>APP_CODE){ const dl=$('cDowD'); dl.textContent=T('newVer')+' '+j.version+'，'+T('dlUpdD'); dl.classList.add('hot'); toast(T('newVer')+' '+j.version); }
+    else { $('cDowD').textContent=(latest===APP_CODE?T('isLatest'):T('sameVer')); $('cDowD').classList.remove('hot'); toast(T('isLatest')); }
+    d.textContent=T('chkAgain');
   }catch(e){
     $('cVerInfo').textContent='';
-    $('cNoteMd').innerHTML=mdRender('> 更新源不可用\n\n已尝试 GitHub 与多个国内镜像，均无响应。请检查网络后重试，或到 '+T('gitOpen')+' 仓库手动下载。');
-    $('cDowD').textContent='暂无可用更新源'; $('cDowD').classList.remove('hot');
-    toast('更新源不可用，请检查网络');
+    $('cNoteMd').innerHTML=mdRender('> '+T('upSrcNote')+'\n\n'+T('srcUnavail')+' '+T('gitOpen'));
+    $('cDowD').textContent=T('srcDown'); $('cDowD').classList.remove('hot');
+    toast(T('srcUnavail'));
   }
 }
 async function doUpdate(){
-  if(!LATEST||!LATEST.zipUrl){ toast('请先检查更新'); return; }
-  if(!confirm('下载并安装 '+LATEST.version+' ？\n将自动尝试国内镜像下载')) return;
+  if(!LATEST||!LATEST.zipUrl){ toast(T('plsCheck')); return; }
+  if(!confirm(T('dlQ')+' '+LATEST.version+' ？\n'+T('dlQ2'))) return;
   const fn='bgfreeze-R-'+LATEST.version+'.zip';
-  toast('开始下载 '+fn+' …');
+  toast(T('dlBegin')+' '+fn+' …');
   const urls=dlUrls(LATEST.zipUrl);
   const r=await api('/api/action',{method:'POST',body:JSON.stringify({action:'update',urls:urls,file:fn})});
-  if(r&&r.ok){ toast('下载并安装完成，建议重启使新版本生效'); }
-  else toast('更新失败，请查看日志');
+  if(r&&r.ok){ toast(T('upSrcDone')); }
+  else toast(T('upSrcFail'));
 }
 function rebootSys(){
-  if(!confirm('确认重启系统？')) return;
+  if(!confirm(T('cfmReboot'))) return;
   api('/api/action',{method:'POST',body:JSON.stringify({action:'reboot'})});
-  toast('正在重启…');
+  toast(T('rebooting'));
 }
 function uninstallMod(){
-  if(!confirm('确认卸载 BGFreeze-R？配置将保留')) return;
+  if(!confirm(T('cfmUninstall'))) return;
   api('/api/action',{method:'POST',body:JSON.stringify({action:'uninstall'})});
-  toast('正在卸载…');
+  toast(T('uninstalling'));
 }
 function paintCtl(){
   if(!S.status) return;
